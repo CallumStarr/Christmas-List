@@ -130,7 +130,7 @@ if submitted:
                 # 2. SELECT MODEL
                 model = genai.GenerativeModel('gemini-flash-latest')
                 
-                # 3. PROMPT (Refined for Accuracy)
+                # 3. PROMPT (The Gold Standard Logic)
                 prompt = f"""
                 Act as an expert personal shopper for kids. 
                 Suggest 5 specific toy names for a {age}.
@@ -139,17 +139,21 @@ if submitted:
                 Budget: {budget}
                 Region: {selected_region}
 
-                CRITICAL INSTRUCTION: verify product codes. Do not invent LEGO set numbers. 
-                If you suggest a LEGO set, provide the correct set number in the 'amazon_search_term'.
+                CRITICAL INSTRUCTION FOR SEARCH TERMS:
+                - You must construct the 'amazon_search_term' by combining the Brand, the Full Product Name, and the Model Number (if applicable).
+                - **RULE:** The Model Number MUST be wrapped in double quotes.
+                - Correct Example: 'LEGO Technic Porsche 911 RSR "42096"'
+                - Incorrect Example: 'LEGO "42096"' (Too short)
+                - Incorrect Example: 'LEGO Technic Porsche 42096' (No quotes)
                 
                 Return strictly JSON:
                 [
                     {{
-                        "gift_name": "Display Name (e.g. LEGO Technic Heavy-Duty Tow Truck)",
-                        "amazon_search_term": "The precise keyword to search Amazon (e.g. 'LEGO 42128' or 'Melissa & Doug Wooden Pizza'). Keep this short and accurate.",
+                        "gift_name": "Display Name (e.g. LEGO Technic Porsche 911 RSR)",
+                        "amazon_search_term": "Brand + Full Name + \"Model Number\" (e.g. LEGO Technic Porsche 911 RSR \"42096\")",
                         "why_it_fits": "One sentence on why it fits the interests",
                         "developmental_benefit": "One sentence on the educational benefit",
-                        "buying_tip": "A specific tip to ensure they buy the right thing (e.g. 'Ensure it is the Technic version with pneumatic functions')"
+                        "buying_tip": "A specific tip (e.g. 'Ensure it is the Technic version')"
                     }}
                 ]
                 """
@@ -174,7 +178,7 @@ if submitted:
                     domain = region_data["domain"]
                     tag = region_data["tag"]
                     
-                    # We encode the search term to be URL safe
+                    # We encode the search term to be URL safe (quotes become %22)
                     encoded_search = urllib.parse.quote(search_term)
                     amazon_link = f"https://www.amazon{domain}/s?k={encoded_search}&tag={tag}"
 
@@ -189,9 +193,11 @@ if submitted:
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        # Button uses Display Name for text, but Search Term for the link
+                        # Button Label: We show the search term but remove quotes so it looks nice
+                        clean_label = search_term.replace('"', '')
+                        
                         st.link_button(
-                            label=f"👉 Find '{search_term}' on Amazon{domain}", 
+                            label=f"👉 Find '{clean_label}' on Amazon{domain}", 
                             url=amazon_link,
                             type="primary",
                             use_container_width=True
