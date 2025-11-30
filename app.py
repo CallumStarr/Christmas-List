@@ -9,12 +9,12 @@ import urllib.parse
 AMAZON_CONFIG = {
     "USA (.com)": {
         "domain": ".com", 
-        "tag": "your-us-tag-20", 
+        "tag": "mcstarrstudio-21", 
         "currency": "$"
     },
-    "United Kingdom (.co.uk)": {
+        "United Kingdom (.co.uk)": {
         "domain": ".co.uk", 
-        "tag": "your-uk-tag-21", 
+        "tag": "mcstarrstudio-21",  # <--- Perfect!
         "currency": "£"
     },
     "Canada (.ca)": {
