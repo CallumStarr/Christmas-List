@@ -11,21 +11,32 @@ AMAZON_TAG = "your-tag-20"
 
 st.set_page_config(page_title="Santa's AI Helper", page_icon="🎄", layout="centered")
 
-# --- HELPER: SAFE IMAGE SEARCH ---
+# --- HELPER: SMART IMAGE SEARCH ---
+@st.cache_data(show_spinner=False) # Caches results so the app runs faster on second load
 def get_safe_toy_image(toy_name):
     """
-    Searches ONLY Amazon.com for the image to ensure relevance and safety.
+    1. Tries to find an image on Amazon (best match).
+    2. If that fails, searches the general web with a 'white background' filter (cleaner look).
     """
     try:
         with DDGS() as ddgs:
-            # We restrict the search to amazon.com to avoid random internet images
-            # We also turn SafeSearch to 'On' (Strict)
-            query = f"site:amazon.com {toy_name} toy"
-            results = list(ddgs.images(query, max_results=1, safesearch='On'))
+            # ATTEMPT 1: Strict Amazon Search (Best for product accuracy)
+            query_amazon = f"site:amazon.com {toy_name} toy"
+            results = list(ddgs.images(query_amazon, max_results=1, safesearch='On'))
             
             if results:
                 return results[0]['image']
-    except Exception:
+            
+            # ATTEMPT 2: General Fallback (If Amazon yields nothing)
+            # We remove 'site:amazon.com' but add 'white background' to look like a product photo
+            query_general = f"{toy_name} toy white background" 
+            results_general = list(ddgs.images(query_general, max_results=1, safesearch='On'))
+            
+            if results_general:
+                return results_general[0]['image']
+
+    except Exception as e:
+        print(f"Error fetching image for {toy_name}: {e}")
         return None
     return None
 
@@ -65,7 +76,7 @@ st.markdown("""
 
 # --- HEADER ---
 st.title("🎄 Santa's AI Helper")
-st.write("Enter the child's interests to generate a gift list.")
+st.write("Enter the child's interests to generate a visual gift list.")
 
 # --- INPUT FORM ---
 with st.form("gift_form"):
@@ -78,8 +89,8 @@ with st.form("gift_form"):
     interests = st.text_area("Child's Interests", placeholder="e.g. Paw Patrol, muddy puddles, dinosaurs")
     goals = st.text_input("Parent Goals", placeholder="e.g. Montessori, durable, quiet play")
     
-    # NEW: Allow user to disable images if they want speed/cleanliness
-    show_images = st.checkbox("Show Toy Images (Beta)", value=True)
+    # Checkbox to toggle images on/off
+    show_images = st.checkbox("Show Toy Images", value=True)
     
     submitted = st.form_submit_button("Generate Gift List")
 
@@ -130,7 +141,7 @@ if submitted:
                     search_term = urllib.parse.quote(gift['gift_name'])
                     amazon_link = f"https://www.amazon.com/s?k={search_term}&tag={AMAZON_TAG}"
 
-                    # B. Fetch Image (Only if user checked the box)
+                    # B. Fetch Image (Only if checked)
                     img_url = None
                     if show_images:
                         img_url = get_safe_toy_image(gift['gift_name'])
@@ -145,24 +156,35 @@ if submitted:
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        # Layout based on whether we have an image
+                        # Image and Button Layout
                         if show_images:
                             col_img, col_btn = st.columns([1, 2])
+                            
                             with col_img:
                                 if img_url:
                                     st.image(img_url, width=150)
                                 else:
-                                    # Graceful fallback if no Amazon image found
-                                    st.caption("No preview available")
+                                    # Graceful fallback if absolutely no image found
+                                    st.markdown("## 🎁") 
+                                    st.caption("No preview")
+                                    
                             with col_btn:
                                 st.write(" ") 
                                 st.write(" ") 
-                                st.link_button(f"Buy {gift['gift_name']}", amazon_link, type="primary")
+                                st.link_button(
+                                    label=f"Buy {gift['gift_name']}", 
+                                    url=amazon_link,
+                                    type="primary"
+                                )
                         else:
-                            # Simple layout if images are off
-                            st.link_button(f"Buy {gift['gift_name']} on Amazon 🎁", amazon_link, type="primary")
+                            # Simple layout without images
+                            st.link_button(
+                                label=f"Buy {gift['gift_name']} on Amazon 🎁", 
+                                url=amazon_link,
+                                type="primary"
+                            )
                         
-                        st.write("---")
+                        st.write("---") # Separator
 
             except Exception as e:
                 st.error(f"The Elves encountered a glitch: {e}")
