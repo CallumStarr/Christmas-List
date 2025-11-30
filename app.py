@@ -6,7 +6,6 @@ import urllib.parse
 # --- CONFIGURATION ---
 # 1. Get your Gemini API Key: https://aistudio.google.com/
 # 2. Configure your Amazon Regions and Affiliate Tags below.
-#    Note: Amazon tags are region-specific!
 AMAZON_CONFIG = {
     "USA (.com)": {
         "domain": ".com", 
@@ -62,8 +61,7 @@ st.markdown("""
     .gift-reason {
         color: #555;
         font-size: 16px;
-        line-height: 1.5;
-        margin-bottom: 15px;
+        margin-bottom: 10px;
         border-left: 4px solid #f1c40f;
         padding-left: 10px;
     }
@@ -73,8 +71,18 @@ st.markdown("""
         background-color: #f0f8ff;
         padding: 12px;
         border-radius: 8px;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
         border: 1px solid #d6eaf8;
+    }
+    .pro-tip {
+        background-color: #e8f8f5;
+        border: 1px solid #d1f2eb;
+        color: #117a65;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 20px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -85,10 +93,7 @@ st.write("Enter the child's interests to generate a curated gift list.")
 
 # --- INPUT FORM ---
 with st.form("gift_form"):
-    # Region Selector
     selected_region = st.selectbox("Select Amazon Region", list(AMAZON_CONFIG.keys()))
-    
-    # Get details based on selection
     region_data = AMAZON_CONFIG[selected_region]
     currency_symbol = region_data["currency"]
     
@@ -96,7 +101,6 @@ with st.form("gift_form"):
     with col1:
         age = st.text_input("Age Group", placeholder="e.g. 3 year old")
     with col2:
-        # Dynamic budget currency
         budget = st.selectbox("Budget", [
             "Any", 
             f"Under {currency_symbol}20", 
@@ -126,21 +130,22 @@ if submitted:
                 # 2. SELECT MODEL
                 model = genai.GenerativeModel('gemini-flash-latest')
                 
-                # 3. PROMPT
+                # 3. PROMPT (Updated to ask for buying_tip)
                 prompt = f"""
                 Act as an expert personal shopper for kids. 
                 Suggest 5 specific toy names for a {age}.
                 Interests: {interests}
                 Goals: {goals}
                 Budget: {budget}
-                Region: {selected_region} (Suggest items available here)
+                Region: {selected_region}
 
                 Return strictly JSON:
                 [
                     {{
                         "gift_name": "Specific Product Name",
                         "why_it_fits": "One sentence on why it fits the interests",
-                        "developmental_benefit": "One sentence on the educational benefit"
+                        "developmental_benefit": "One sentence on the educational benefit",
+                        "buying_tip": "A short, specific tip to ensure they buy the best version (e.g. 'Look for the Melissa & Doug brand', 'Avoid the plastic version', 'Get the 100-piece set')"
                     }}
                 ]
                 """
@@ -153,15 +158,15 @@ if submitted:
 
                 # 4. DISPLAY LOOP
                 for gift in gift_data:
-                    # Safely get data
                     name = gift.get('gift_name', 'Mystery Gift')
                     reason = gift.get('why_it_fits', 'Fits your criteria perfectly.')
                     benefit = gift.get('developmental_benefit', 'Great for development.')
+                    # Get the tip (with a default fallback just in case)
+                    tip = gift.get('buying_tip', f"Look for the highest rated version of {name}")
                     
                     # Generate Regional Link
                     domain = region_data["domain"]
                     tag = region_data["tag"]
-                    
                     search_query_url = urllib.parse.quote(name)
                     amazon_link = f"https://www.amazon{domain}/s?k={search_query_url}&tag={tag}"
 
@@ -172,10 +177,11 @@ if submitted:
                             <div class="gift-title">{name}</div>
                             <div class="gift-reason">💡 {reason}</div>
                             <div class="gift-benefit">🎓 {benefit}</div>
+                            <!-- New Pro Tip Section -->
+                            <div class="pro-tip">✨ <strong>Pro Tip:</strong> {tip}</div>
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        # Full-width button
                         st.link_button(
                             label=f"👉 Search '{name}' on Amazon{domain}", 
                             url=amazon_link,
@@ -183,7 +189,7 @@ if submitted:
                             use_container_width=True
                         )
                         
-                        st.write(" ") # Spacer
+                        st.write(" ") 
 
             except Exception as e:
                 st.error(f"The Elves encountered a glitch: {e}")
