@@ -12,31 +12,31 @@ AMAZON_TAG = "your-tag-20"
 st.set_page_config(page_title="Santa's AI Helper", page_icon="🎄", layout="centered")
 
 # --- HELPER: SMART IMAGE SEARCH ---
-@st.cache_data(show_spinner=False) # Caches results so the app runs faster on second load
-def get_safe_toy_image(toy_name):
+@st.cache_data(show_spinner=False)
+def get_safe_toy_image(search_term):
     """
-    1. Tries to find an image on Amazon (best match).
-    2. If that fails, searches the general web with a 'white background' filter (cleaner look).
+    Uses a simplified search term to find an image.
     """
     try:
         with DDGS() as ddgs:
-            # ATTEMPT 1: Strict Amazon Search (Best for product accuracy)
-            query_amazon = f"site:amazon.com {toy_name} toy"
+            # ATTEMPT 1: Search Amazon specifically
+            query_amazon = f"site:amazon.com {search_term}"
             results = list(ddgs.images(query_amazon, max_results=1, safesearch='On'))
             
             if results:
                 return results[0]['image']
             
-            # ATTEMPT 2: General Fallback (If Amazon yields nothing)
-            # We remove 'site:amazon.com' but add 'white background' to look like a product photo
-            query_general = f"{toy_name} toy white background" 
+            # ATTEMPT 2: General Broad Search (Fallback)
+            # Just the toy name + "toy". No complex filters.
+            query_general = f"{search_term} toy" 
             results_general = list(ddgs.images(query_general, max_results=1, safesearch='On'))
             
             if results_general:
                 return results_general[0]['image']
 
     except Exception as e:
-        print(f"Error fetching image for {toy_name}: {e}")
+        # This will print to the server logs, helpful for debugging
+        print(f"Error fetching image for {search_term}: {e}")
         return None
     return None
 
@@ -112,6 +112,7 @@ if submitted:
                 model = genai.GenerativeModel('gemini-flash-latest')
                 
                 # 3. PROMPT
+                # UPDATED: We now ask for 'image_search_term' to get a simpler keyword for searching
                 prompt = f"""
                 Act as an expert personal shopper for kids. 
                 Suggest 5 specific toy names for a {age}.
@@ -123,6 +124,7 @@ if submitted:
                 [
                     {{
                         "gift_name": "Specific Product Name",
+                        "image_search_term": "Short, simple keywords to find an image (e.g. 'Magna-Tiles 100 piece')",
                         "why_it_fits": "Short reason",
                         "developmental_benefit": "Short benefit"
                     }}
@@ -141,10 +143,12 @@ if submitted:
                     search_term = urllib.parse.quote(gift['gift_name'])
                     amazon_link = f"https://www.amazon.com/s?k={search_term}&tag={AMAZON_TAG}"
 
-                    # B. Fetch Image (Only if checked)
+                    # B. Fetch Image (Using the SIMPLIFIED search term)
                     img_url = None
                     if show_images:
-                        img_url = get_safe_toy_image(gift['gift_name'])
+                        # Use the new 'image_search_term' from JSON if available, otherwise fallback to name
+                        term_to_use = gift.get('image_search_term', gift['gift_name'])
+                        img_url = get_safe_toy_image(term_to_use)
 
                     # C. Layout
                     with st.container():
@@ -164,7 +168,7 @@ if submitted:
                                 if img_url:
                                     st.image(img_url, width=150)
                                 else:
-                                    # Graceful fallback if absolutely no image found
+                                    # Fallback
                                     st.markdown("## 🎁") 
                                     st.caption("No preview")
                                     
@@ -177,7 +181,7 @@ if submitted:
                                     type="primary"
                                 )
                         else:
-                            # Simple layout without images
+                            # Simple layout
                             st.link_button(
                                 label=f"Buy {gift['gift_name']} on Amazon 🎁", 
                                 url=amazon_link,
