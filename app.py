@@ -16,26 +16,25 @@ st.set_page_config(page_title="Santa's AI Helper", page_icon="🎄", layout="cen
 def get_safe_toy_image(search_term):
     """
     Uses a simplified search term to find an image.
+    Now with broader search settings to fix 'No Preview' issues.
     """
     try:
         with DDGS() as ddgs:
-            # ATTEMPT 1: Search Amazon specifically
+            # ATTEMPT 1: Search Amazon specifically (Best for white-background product shots)
             query_amazon = f"site:amazon.com {search_term}"
-            results = list(ddgs.images(query_amazon, max_results=1, safesearch='On'))
+            results = list(ddgs.images(query_amazon, max_results=1))
             
             if results:
                 return results[0]['image']
             
-            # ATTEMPT 2: General Broad Search (Fallback)
-            # Just the toy name + "toy". No complex filters.
-            query_general = f"{search_term} toy" 
-            results_general = list(ddgs.images(query_general, max_results=1, safesearch='On'))
+            # ATTEMPT 2: Broad Fallback (If Amazon fails)
+            # Removed "white background" and strict filters to ensure we get SOMETHING.
+            results_general = list(ddgs.images(search_term, max_results=1))
             
             if results_general:
                 return results_general[0]['image']
 
     except Exception as e:
-        # This will print to the server logs, helpful for debugging
         print(f"Error fetching image for {search_term}: {e}")
         return None
     return None
@@ -112,7 +111,6 @@ if submitted:
                 model = genai.GenerativeModel('gemini-flash-latest')
                 
                 # 3. PROMPT
-                # UPDATED: We now ask for 'image_search_term' to get a simpler keyword for searching
                 prompt = f"""
                 Act as an expert personal shopper for kids. 
                 Suggest 5 specific toy names for a {age}.
@@ -124,7 +122,7 @@ if submitted:
                 [
                     {{
                         "gift_name": "Specific Product Name",
-                        "image_search_term": "Short, simple keywords to find an image (e.g. 'Magna-Tiles 100 piece')",
+                        "image_search_term": "Simple keywords to find an image (e.g. 'Magna-Tiles 100 piece')",
                         "why_it_fits": "Short reason",
                         "developmental_benefit": "Short benefit"
                     }}
@@ -139,24 +137,30 @@ if submitted:
 
                 # 4. DISPLAY LOOP
                 for gift in gift_data:
-                    # A. Generate Amazon Search Link
-                    search_term = urllib.parse.quote(gift['gift_name'])
-                    amazon_link = f"https://www.amazon.com/s?k={search_term}&tag={AMAZON_TAG}"
+                    # Safely get data with defaults to prevent 'KeyError' crashes
+                    name = gift.get('gift_name', 'Mystery Gift')
+                    reason = gift.get('why_it_fits', 'Perfect for your criteria.')
+                    benefit = gift.get('developmental_benefit', 'Great for development.')
+                    
+                    # Search term for image
+                    img_search = gift.get('image_search_term', name)
 
-                    # B. Fetch Image (Using the SIMPLIFIED search term)
+                    # A. Generate Amazon Search Link
+                    search_query_url = urllib.parse.quote(name)
+                    amazon_link = f"https://www.amazon.com/s?k={search_query_url}&tag={AMAZON_TAG}"
+
+                    # B. Fetch Image
                     img_url = None
                     if show_images:
-                        # Use the new 'image_search_term' from JSON if available, otherwise fallback to name
-                        term_to_use = gift.get('image_search_term', gift['gift_name'])
-                        img_url = get_safe_toy_image(term_to_use)
+                        img_url = get_safe_toy_image(img_search)
 
                     # C. Layout
                     with st.container():
                         st.markdown(f"""
                         <div class="gift-card">
-                            <div class="gift-title">{gift['gift_name']}</div>
-                            <div class="gift-reason">💡 {gift['why_it_fits']}</div>
-                            <div class="gift-benefit">🎓 {gift['developmental_benefit']}</div>
+                            <div class="gift-title">{name}</div>
+                            <div class="gift-reason">💡 {reason}</div>
+                            <div class="gift-benefit">🎓 {benefit}</div>
                         </div>
                         """, unsafe_allow_html=True)
                         
@@ -168,7 +172,7 @@ if submitted:
                                 if img_url:
                                     st.image(img_url, width=150)
                                 else:
-                                    # Fallback
+                                    # Graceful fallback if no image found
                                     st.markdown("## 🎁") 
                                     st.caption("No preview")
                                     
@@ -176,14 +180,13 @@ if submitted:
                                 st.write(" ") 
                                 st.write(" ") 
                                 st.link_button(
-                                    label=f"Buy {gift['gift_name']}", 
+                                    label=f"Buy {name}", 
                                     url=amazon_link,
                                     type="primary"
                                 )
                         else:
-                            # Simple layout
                             st.link_button(
-                                label=f"Buy {gift['gift_name']} on Amazon 🎁", 
+                                label=f"Buy {name} on Amazon 🎁", 
                                 url=amazon_link,
                                 type="primary"
                             )
