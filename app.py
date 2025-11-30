@@ -4,14 +4,40 @@ import json
 import urllib.parse
 
 # --- CONFIGURATION ---
-# 1. Get your API Key here: https://aistudio.google.com/
-# 2. Add your Amazon Affiliate Tag below
-AMAZON_TAG = "your-tag-20"
+# 1. Get your Gemini API Key: https://aistudio.google.com/
+# 2. Configure your Amazon Regions and Affiliate Tags below.
+#    Note: Amazon tags are region-specific!
+AMAZON_CONFIG = {
+    "USA (.com)": {
+        "domain": ".com", 
+        "tag": "your-us-tag-20", 
+        "currency": "$"
+    },
+    "United Kingdom (.co.uk)": {
+        "domain": ".co.uk", 
+        "tag": "your-uk-tag-21", 
+        "currency": "£"
+    },
+    "Canada (.ca)": {
+        "domain": ".ca", 
+        "tag": "your-ca-tag-20", 
+        "currency": "C$"
+    },
+    "Australia (.com.au)": {
+        "domain": ".com.au", 
+        "tag": "your-au-tag-20", 
+        "currency": "A$"
+    },
+    "Germany (.de)": {
+        "domain": ".de", 
+        "tag": "your-de-tag-21", 
+        "currency": "€"
+    }
+}
 
 st.set_page_config(page_title="Santa's AI Helper", page_icon="🎄", layout="centered")
 
 # --- CSS STYLING ---
-# Since we have no images, we make the cards look extra nice
 st.markdown("""
     <style>
     .gift-card {
@@ -50,7 +76,6 @@ st.markdown("""
         margin-bottom: 20px;
         border: 1px solid #d6eaf8;
     }
-    /* Custom button styling if needed, though we use st.link_button now */
     </style>
 """, unsafe_allow_html=True)
 
@@ -60,11 +85,24 @@ st.write("Enter the child's interests to generate a curated gift list.")
 
 # --- INPUT FORM ---
 with st.form("gift_form"):
+    # Region Selector
+    selected_region = st.selectbox("Select Amazon Region", list(AMAZON_CONFIG.keys()))
+    
+    # Get details based on selection
+    region_data = AMAZON_CONFIG[selected_region]
+    currency_symbol = region_data["currency"]
+    
     col1, col2 = st.columns(2)
     with col1:
         age = st.text_input("Age Group", placeholder="e.g. 3 year old")
     with col2:
-        budget = st.selectbox("Budget", ["Any", "Under $20", "$20 - $50", "$50+"])
+        # Dynamic budget currency
+        budget = st.selectbox("Budget", [
+            "Any", 
+            f"Under {currency_symbol}20", 
+            f"{currency_symbol}20 - {currency_symbol}50", 
+            f"{currency_symbol}50+"
+        ])
 
     interests = st.text_area("Child's Interests", placeholder="e.g. Paw Patrol, muddy puddles, dinosaurs")
     goals = st.text_input("Parent Goals", placeholder="e.g. Montessori, durable, quiet play")
@@ -86,17 +124,16 @@ if submitted:
         with st.spinner("✨ Checking with the Elves..."):
             try:
                 # 2. SELECT MODEL
-                # Using latest flash model for speed
                 model = genai.GenerativeModel('gemini-flash-latest')
                 
                 # 3. PROMPT
-                # Simplified prompt - we don't need image keywords anymore
                 prompt = f"""
                 Act as an expert personal shopper for kids. 
                 Suggest 5 specific toy names for a {age}.
                 Interests: {interests}
                 Goals: {goals}
                 Budget: {budget}
+                Region: {selected_region} (Suggest items available here)
 
                 Return strictly JSON:
                 [
@@ -121,9 +158,12 @@ if submitted:
                     reason = gift.get('why_it_fits', 'Fits your criteria perfectly.')
                     benefit = gift.get('developmental_benefit', 'Great for development.')
                     
-                    # Generate Search Link
+                    # Generate Regional Link
+                    domain = region_data["domain"]
+                    tag = region_data["tag"]
+                    
                     search_query_url = urllib.parse.quote(name)
-                    amazon_link = f"https://www.amazon.com/s?k={search_query_url}&tag={AMAZON_TAG}"
+                    amazon_link = f"https://www.amazon{domain}/s?k={search_query_url}&tag={tag}"
 
                     # Layout
                     with st.container():
@@ -135,12 +175,12 @@ if submitted:
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        # Big, prominent button
+                        # Full-width button
                         st.link_button(
-                            label=f"👉 Search '{name}' on Amazon", 
+                            label=f"👉 Search '{name}' on Amazon{domain}", 
                             url=amazon_link,
                             type="primary",
-                            use_container_width=True # Makes the button full width
+                            use_container_width=True
                         )
                         
                         st.write(" ") # Spacer
