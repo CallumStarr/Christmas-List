@@ -53,7 +53,7 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(0,0,0,0.1);
     }
     .gift-title {
-        font-size: 24px;
+        font-size: 22px;
         font-weight: 800;
         color: #2c3e50;
         margin-bottom: 10px;
@@ -130,7 +130,7 @@ if submitted:
                 # 2. SELECT MODEL
                 model = genai.GenerativeModel('gemini-flash-latest')
                 
-                # 3. PROMPT (Updated to ask for buying_tip)
+                # 3. PROMPT (Refined for Accuracy)
                 prompt = f"""
                 Act as an expert personal shopper for kids. 
                 Suggest 5 specific toy names for a {age}.
@@ -139,13 +139,17 @@ if submitted:
                 Budget: {budget}
                 Region: {selected_region}
 
+                CRITICAL INSTRUCTION: verify product codes. Do not invent LEGO set numbers. 
+                If you suggest a LEGO set, provide the correct set number in the 'amazon_search_term'.
+                
                 Return strictly JSON:
                 [
                     {{
-                        "gift_name": "Specific Product Name",
+                        "gift_name": "Display Name (e.g. LEGO Technic Heavy-Duty Tow Truck)",
+                        "amazon_search_term": "The precise keyword to search Amazon (e.g. 'LEGO 42128' or 'Melissa & Doug Wooden Pizza'). Keep this short and accurate.",
                         "why_it_fits": "One sentence on why it fits the interests",
                         "developmental_benefit": "One sentence on the educational benefit",
-                        "buying_tip": "A short, specific tip to ensure they buy the best version (e.g. 'Look for the Melissa & Doug brand', 'Avoid the plastic version', 'Get the 100-piece set')"
+                        "buying_tip": "A specific tip to ensure they buy the right thing (e.g. 'Ensure it is the Technic version with pneumatic functions')"
                     }}
                 ]
                 """
@@ -159,16 +163,20 @@ if submitted:
                 # 4. DISPLAY LOOP
                 for gift in gift_data:
                     name = gift.get('gift_name', 'Mystery Gift')
+                    # Fallback: if AI fails to give search term, use name
+                    search_term = gift.get('amazon_search_term', name) 
+                    
                     reason = gift.get('why_it_fits', 'Fits your criteria perfectly.')
                     benefit = gift.get('developmental_benefit', 'Great for development.')
-                    # Get the tip (with a default fallback just in case)
                     tip = gift.get('buying_tip', f"Look for the highest rated version of {name}")
                     
-                    # Generate Regional Link
+                    # Generate Regional Link using the OPTIMIZED Search Term
                     domain = region_data["domain"]
                     tag = region_data["tag"]
-                    search_query_url = urllib.parse.quote(name)
-                    amazon_link = f"https://www.amazon{domain}/s?k={search_query_url}&tag={tag}"
+                    
+                    # We encode the search term to be URL safe
+                    encoded_search = urllib.parse.quote(search_term)
+                    amazon_link = f"https://www.amazon{domain}/s?k={encoded_search}&tag={tag}"
 
                     # Layout
                     with st.container():
@@ -177,13 +185,13 @@ if submitted:
                             <div class="gift-title">{name}</div>
                             <div class="gift-reason">💡 {reason}</div>
                             <div class="gift-benefit">🎓 {benefit}</div>
-                            <!-- New Pro Tip Section -->
                             <div class="pro-tip">✨ <strong>Pro Tip:</strong> {tip}</div>
                         </div>
                         """, unsafe_allow_html=True)
                         
+                        # Button uses Display Name for text, but Search Term for the link
                         st.link_button(
-                            label=f"👉 Search '{name}' on Amazon{domain}", 
+                            label=f"👉 Find '{search_term}' on Amazon{domain}", 
                             url=amazon_link,
                             type="primary",
                             use_container_width=True
