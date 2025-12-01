@@ -209,14 +209,6 @@ if submitted:
                 1. DIVERSITY: Do not suggest 8 of the same type of thing (e.g. don't do 8 Lego sets). Mix categories (Books, Toys, Gear, Decor, etc.) unless the user asked for one specific thing.
                 2. SEARCHABILITY: The "search_term" must be easily found on Amazon.
                 3. RELEVANCE: Explain exactly why this specific item matches the entered interests.
-
-                IMPORTANT OUTPUT RULES (FOR ALL STRING FIELDS)
-                - All values for "category", "gift_name", "amazon_search_term", "reason", "impact", and "buying_tip"
-                  MUST be plain text only.
-                - Do NOT include any HTML tags (<div>, <strong>, etc.), markdown formatting, bullet points,
-                  or code blocks (no ``` fences).
-                - Each field must be a single-line sentence (you may use punctuation, but no line breaks).
-
                 
                 OUTPUT FORMAT (JSON ARRAY ONLY):
                 [
@@ -281,16 +273,6 @@ if st.session_state['generated'] and st.session_state['results']:
                     <div class="gift-title">{i+1}. {gift['gift_name']}</div>
                     <span class="badge">{gift.get('category', 'Gift')}</span>
                 </div>
-                <div class="section-title">Why they'll love it</div>
-                <div class="gift-text">{gift['reason']}</div>
-                
-                <div class="section-title">Lasting Impact</div>
-                <div class="gift-text"><i>{gift['impact']}</i></div>
-                
-                <div style="margin-top:15px; font-size:13px; color:#d68910;">
-                    <strong>⚠️ Tip:</strong> {gift['buying_tip']}
-                </div>
-            </div>
             """, unsafe_allow_html=True)
             
             # Use columns to keep the button from stretching too wide
