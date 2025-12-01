@@ -34,7 +34,7 @@ AMAZON_CONFIG = {
     }
 }
 
-st.set_page_config(page_title="Santa's AI Helper", page_icon="🎄", layout="centered")
+st.set_page_config(page_title="AI Christmas Gift Idea Generator", page_icon="🎄", layout="centered")
 
 # --- CSS STYLING ---
 st.markdown("""
@@ -88,7 +88,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- HEADER ---
-st.title("🎄 Santa's AI Helper")
+st.title("🎄 AI Christmas Gift Idea Generator")
 st.write("Enter the child's interests to generate a curated gift list.")
 
 # --- INPUT FORM ---
