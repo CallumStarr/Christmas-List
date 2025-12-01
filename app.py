@@ -58,7 +58,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
     
-/* Global text colours (override Streamlit's white text) */
+    /* Global text colours (override Streamlit's white text) */
     h2, h3, h4, h5, h6,
     [data-testid="stMarkdownContainer"],
     [data-testid="stMarkdownContainer"] p,
