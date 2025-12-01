@@ -325,6 +325,39 @@ if submitted:
 if st.session_state['generated'] and st.session_state['results']:
     
     results = st.session_state['results']
+
+for i, gift in enumerate(results):
+    name = clean_text_field(gift.get('gift_name', 'Mystery Gift'))
+    category = clean_text_field(gift.get('category', 'Gift'))
+    reason = clean_text_field(gift.get('reason', 'Fits your criteria perfectly.'))
+    impact = clean_text_field(gift.get('impact', 'This gift will have a positive, lasting impact.'))
+    tip = clean_text_field(gift.get('buying_tip', f"Look for the highest rated version of {name}"))
+
+    domain = region_data["domain"]
+    tag = region_data["tag"]
+    raw_term = gift.get('amazon_search_term', name)
+    raw_term = clean_text_field(raw_term)
+    encoded_term = urllib.parse.quote(raw_term.replace('"', ''))
+    link = f"https://www.amazon{domain}/s?k={encoded_term}&tag={tag}"
+
+    st.markdown(f"""
+    <div class="gift-card">
+        <div class="gift-header">
+            <div class="gift-title">{i+1}. {name}</div>
+            <span class="badge">{category}</span>
+        </div>
+        <div class="section-title">Why they'll love it</div>
+        <div class="gift-text">{reason}</div>
+
+        <div class="section-title">Lasting Impact</div>
+        <div class="gift-text"><i>{impact}</i></div>
+
+        <div style="margin-top:15px; font-size:13px; color:#d68910;">
+            <strong>⚠️ Tip:</strong> {tip}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     
     # 1. Action Bar (CSV Download)
     df = pd.DataFrame(results)
@@ -390,3 +423,18 @@ elif not submitted:
     3. **Get a curated list:** The AI checks for products that fit your description and Under £25.
     4. **Click to buy:** Direct links to search your local Amazon store.
     """)
+
+def clean_text_field(value: str) -> str:
+    if not isinstance(value, str):
+        value = str(value)
+
+    # Remove fenced code blocks ```...```
+    value = re.sub(r"```.*?```", "", value, flags=re.DOTALL)
+
+    # Strip any HTML tags just in case
+    value = re.sub(r"<[^>]+>", "", value)
+
+    # Collapse whitespace
+    value = re.sub(r"\s+", " ", value).strip()
+    return value
+
