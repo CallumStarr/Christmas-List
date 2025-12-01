@@ -58,7 +58,7 @@ st.markdown(
     [data-testid="stMarkdownContainer"],
     [data-testid="stMarkdownContainer"] p,
     label {
-        color: #2c3e50 !important;   /* nice dark grey */
+        color: #8f2c2c !important;   /* nice dark grey */
     }
 
     /* Make section headings (like "Top Picks") festive red */
