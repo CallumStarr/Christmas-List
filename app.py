@@ -368,25 +368,6 @@ if st.session_state['generated'] and st.session_state['results']:
         encoded_term = urllib.parse.quote(raw_term.replace('"', ''))
         link = f"https://www.amazon{domain}/s?k={encoded_term}&tag={tag}"
 
-        # Display logic
-        with st.container():
-            st.markdown(f"""
-            <div class="gift-card">
-                <div class="gift-header">
-                    <div class="gift-title">{i+1}. {name}</div>
-                    <span class="badge">{category}</span>
-                </div>
-                <div class="section-title">Why they'll love it</div>
-                <div class="gift-text">{reason}</div>
-
-                <div class="section-title">Lasting Impact</div>
-                <div class="gift-text"><i>{impact}</i></div>
-
-                <div style="margin-top:15px; font-size:13px; color:#d68910;">
-                    <strong>⚠️ Tip:</strong> {tip}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
 
             # Use columns to keep the button from stretching too wide
             b_col1, b_col2, b_col3 = st.columns([1, 2, 1])
