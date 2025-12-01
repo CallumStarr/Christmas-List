@@ -153,7 +153,7 @@ st.markdown(
         background-color: #e6c1c1 !important;  /* box colour */
         color: #0a1224 !important;             /* text colour */
         border-radius: 12px;
-        border: 1px solid #e6c1c1;             /* festive red border */
+        border: 1px solid #c0392b;             /* festive red border */
         box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
 
