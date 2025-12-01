@@ -142,7 +142,31 @@ st.markdown(
         font-weight: 600;
         margin-bottom: 20px;
     }
+    /* Form inputs & select – stop them being purple */
+    .stTextInput > div > div > input,
+    .stTextArea textarea,
+    [data-baseweb="select"] > div {
+        background-color: #ffffff !important;  /* box colour */
+        color: #111827 !important;             /* text colour */
+        border-radius: 12px;
+        border: 1px solid #c0392b;             /* festive red border */
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
 
+    /* Hover / focus state */
+    .stTextInput > div > div > input:focus,
+    .stTextArea textarea:focus,
+    [data-baseweb="select"] > div:focus-within {
+        border: 2px solid #c0392b !important;
+        box-shadow: 0 0 0 1px #c0392b33;
+        outline: none;
+    }
+
+    /* Placeholder text colour */
+    .stTextInput > div > div > input::placeholder,
+    .stTextArea textarea::placeholder {
+        color: #9ca3af;
+    }
     /* Make buttons look like Christmas tags */
     .stButton > button, a[role="button"] {
         background: linear-gradient(135deg, #c0392b, #e74c3c);
