@@ -209,22 +209,25 @@ st.markdown(
         transform: translateY(-1px);
     }
 
-        /* Force the form submit button (Generate Gift List) to be festive red */
-    form button {
-        background: linear-gradient(135deg, #c0392b, #e74c3c) !important;
-        color: #ffffff !important;
-        border-radius: 999px !important;
-        border: none !important;
-        padding: 0.6rem 1.2rem !important;
-        font-weight: 700 !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+    /* Nuclear fix: completely restyle the form submit button only */
+    button[data-testid="baseButton-secondaryFormSubmit"] {
+        all: unset;  /* wipe Streamlit's default styles */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.6rem 1.2rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #c0392b, #e74c3c);
+        color: #ffffff;
+        font-weight: 700;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        cursor: pointer;
     }
 
-    form button:hover {
-        background: linear-gradient(135deg, #a93226, #cd6155) !important;
+    button[data-testid="baseButton-secondaryFormSubmit"]:hover {
+        background: linear-gradient(135deg, #a93226, #cd6155);
         transform: translateY(-1px);
     }
-
 
     /* Optional: hide Streamlit menu/footer to keep it clean */
     #MainMenu {visibility: hidden;}
