@@ -194,6 +194,25 @@ st.markdown(
         transform: translateY(-1px);
     }
 
+        /* Extra safety: catch the form submit button specifically */
+    form button,
+    button[type="submit"] {
+        background: linear-gradient(135deg, #c0392b, #e74c3c) !important;
+        color: #ffffff !important;
+        border-radius: 999px !important;
+        border: none !important;
+        padding: 0.6rem 1.2rem !important;
+        font-weight: 700 !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+    }
+
+    form button:hover,
+    button[type="submit"]:hover {
+        background: linear-gradient(135deg, #a93226, #cd6155) !important;
+        transform: translateY(-1px);
+    }
+
+
     /* Optional: hide Streamlit menu/footer to keep it clean */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
