@@ -52,12 +52,7 @@ st.markdown(
             no-repeat center center fixed;
         background-size: cover;
     }
-    ...
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-    
+
     /* Global text colours (override Streamlit's white text) */
     h2, h3, h4, h5, h6,
     [data-testid="stMarkdownContainer"],
@@ -97,6 +92,7 @@ st.markdown(
         position: relative;
         overflow: hidden;
     }
+
     .gift-card::before {
         content: "";
         position: absolute;
@@ -107,6 +103,7 @@ st.markdown(
         opacity: 0.15;
         pointer-events: none;
     }
+
     .gift-card:hover {
         transform: translateY(-3px);
         box-shadow: 0 10px 24px rgba(0,0,0,0.15);
@@ -148,6 +145,7 @@ st.markdown(
         font-weight: 600;
         margin-bottom: 20px;
     }
+
     /* Form inputs & select – stop them being purple */
     .stTextInput > div > div > input,
     .stTextArea textarea,
@@ -173,18 +171,30 @@ st.markdown(
     .stTextArea textarea::placeholder {
         color: #9ca3af;
     }
-    /* Make buttons look like Christmas tags */
-    .stButton > button, a[role="button"] {
-        background: linear-gradient(135deg, #c0392b, #e74c3c);
-        color: white !important;
-        border-radius: 999px;
-        border: none;
-        padding: 0.6rem 1.2rem;
-        font-weight: 700;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+
+    /* Override ALL Streamlit buttons (including form submit) */
+    .stButton > button,
+    button[kind="primary"],
+    button[kind="secondary"],
+    button[data-testid="baseButton-secondaryFormSubmit"],
+    button[data-testid="baseButton-primary"],
+    a[role="button"] {
+        background: linear-gradient(135deg, #c0392b, #e74c3c) !important;
+        color: #ffffff !important;
+        border-radius: 999px !important;
+        border: none !important;
+        padding: 0.6rem 1.2rem !important;
+        font-weight: 700 !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
     }
-    .stButton > button:hover, a[role="button"]:hover {
-        background: linear-gradient(135deg, #a93226, #cd6155);
+
+    .stButton > button:hover,
+    button[kind="primary"]:hover,
+    button[kind="secondary"]:hover,
+    button[data-testid="baseButton-secondaryFormSubmit"]:hover,
+    button[data-testid="baseButton-primary"]:hover,
+    a[role="button"]:hover {
+        background: linear-gradient(135deg, #a93226, #cd6155) !important;
         transform: translateY(-1px);
     }
 
@@ -204,12 +214,14 @@ st.markdown(
         animation-duration: 10s, 3s;
         animation-timing-function: linear, ease-in-out;
         animation-iteration-count: infinite, infinite;
+        z-index: 9999;
     }
 
     @keyframes snowflakes-fall {
         0% {top: -10%;}
         100% {top: 110%;}
     }
+
     @keyframes snowflakes-shake {
         0%, 100% {transform: translateX(0);}
         50% {transform: translateX(20px);}
@@ -218,6 +230,7 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
 # --- SNOWFLAKES ---
 snowflakes = ""
 for i in range(12):
@@ -332,7 +345,7 @@ AMAZON SEARCH TERM (CRITICAL RULES)
 - Correct example:
   - "Fujifilm Instax Mini 12 Instant Camera 'Blush Pink'"
 - Incorrect examples:
-  - "LEGO \"42096\"" (too short, missing full product name)
+  - "LEGO "42096"" (too short, missing full product name)
   - "LEGO Technic Porsche 42096" (model number not in quotes)
 - If there is NO clear or commonly used model number:
   - Do NOT invent one.
@@ -390,7 +403,7 @@ Return strictly JSON:
 [
   {{
     "gift_name": "Display Name (e.g. Fujifilm Instax Instant Camera)",
-    "amazon_search_term": "Brand + Full Name + \"Model Number\" (e.g. Fujifilm Instax Instant Camera \"Mini 12\")",
+    "amazon_search_term": "Brand + Full Name + \\"Model Number\\" (e.g. Fujifilm Instax Instant Camera \\"Mini 12\\")",
     "why_it_fits": "One sentence on why it fits the interests",
     "lasting_impact": "One sentence on the lasting_impact of gift",
     "buying_tip": "A specific tip (e.g. 'Ensure it is the Technic version')"
