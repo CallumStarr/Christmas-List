@@ -150,7 +150,7 @@ st.markdown(
     .stTextInput > div > div > input,
     .stTextArea textarea,
     [data-baseweb="select"] > div {
-        background-color: #ffffff !important;  /* box colour */
+        background-color: #e6c1c1 !important;  /* box colour */
         color: #111827 !important;             /* text colour */
         border-radius: 12px;
         border: 1px solid #c0392b;             /* festive red border */
