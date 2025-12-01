@@ -186,7 +186,7 @@ if submitted:
         
         with st.status("✨ The Elves are working...", expanded=True) as status:
             try:
-                model = genai.GenerativeModel('gemini-1.5-flash') # Use lighter, faster model
+                model = genai.GenerativeModel('gemini-flash-latest') # Use lighter, faster model
                 
                 status.write("🔍 Analyzing interests...")
                 status.write("🎁 Checking Amazon inventory (simulated)...")
