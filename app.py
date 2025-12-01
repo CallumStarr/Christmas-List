@@ -191,7 +191,7 @@ if submitted:
                 status.write("🔍 Analyzing interests...")
                 status.write("🎁 Checking Amazon inventory (simulated)...")
                 
-                 prompt = f"""
+                prompt = f"""
                 ROLE: You are an expert personal gift shopper, specialising in thoughtful, high-converting Christmas gifts.
                 Your task:
                 Use the inputs below to recommend exactly 10 specific gift ideas that feel tailored, age-appropriate, and genuinely impressive.
