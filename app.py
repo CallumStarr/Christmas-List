@@ -156,7 +156,7 @@ if submitted:
                   - If the budget is very low, favour small but thoughtful and creative ideas instead of unrealistic high-ticket items.
                 - Be SPECIFIC, not generic:
                   - Suggest concrete products that a person could actually search for on Amazon.
-                  - Prefer recognisable product lines and brands when possible (e.g. "LEGO Technic Porsche 911 RSR" not "a car-themed LEGO set").
+                  - Prefer recognisable product lines and brands when possible (e.g. "Nintendo Switch Lite", "Fujifilm Instax Mini 12 Instant Camera", "Stanley Classic Quencher Tumbler", "Catan Board Game", not "(generic) Board Game".
                 - Aim for VARIETY across the 5 ideas:
                   - Avoid 5 nearly identical items (e.g. five very similar board games).
                   - Vary categories where possible (e.g. one game, one hobby tool, one sentimental/keepsake item, one practical everyday item, one creative or experience-style item), as long as they still match the interests and goals.
@@ -164,6 +164,11 @@ if submitted:
                   - If the goal is humour ("funny gift"), choose playful, light-hearted items that are funny but NOT offensive, cruel, or inappropriate.
                   - If the goal is sentimental ("something they will cherish forever"), prioritise keepsakes, customisable/meaningful gifts, and memory-making items that could have long-term emotional value.
                   - If the goal is enjoyment/utility ("something they will love" or "actually use"), prioritise high-utility items that fit their daily life or main hobbies and that they are realistically likely to use often.
+                  - Do NOT default to the same brand or product type repeatedly (e.g. do not suggest LEGO sets unless they clearly match the interests or age group).
+                  - Your suggestions MUST be grounded in the provided interests and goals, not generic toy ideas.
+                  - Treat the "Interests / hobbies" as your primary guide: every gift should clearly relate to at least one of these interests.
+                  - Avoid suggesting products that are only weakly related to the interests, even if they are popular gifts in general.
+
                 
                 AMAZON SEARCH TERM (CRITICAL RULES)
                 - Every gift must be something that a shopper could plausibly find on Amazon in the specified region.
@@ -172,8 +177,8 @@ if submitted:
                   2) Full Product Name
                   3) Model Number (if applicable)
                 - The Model Number MUST be wrapped in double quotes.
-                - Correct example:
-                  - "LEGO Technic Porsche 911 RSR \"42096\""
+                - - Correct example:
+                  - "Fujifilm Instax Mini 12 Instant Camera 'Blush Pink'"
                 - Incorrect examples:
                   - "LEGO \"42096\"" (too short, missing full product name)
                   - "LEGO Technic Porsche 42096" (model number not in quotes)
