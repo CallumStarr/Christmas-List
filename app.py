@@ -229,17 +229,14 @@ Each object in the array MUST have exactly these keys and no others:
 - "lasting_impact"
 - "buying_tip"
 
-The final output MUST be a JSON array with 5 objects of this form (structure example only):
-
-[
-  {
-    "gift_name": "...",
-    "amazon_search_term": "...",
-    "why_it_fits": "...",
-    "lasting_impact": "...",
-    "buying_tip": "..."
-  }
-]
+Return strictly JSON: 
+[ 
+{{ "gift_name": "Display Name (e.g. LEGO Technic Porsche 911 RSR)", 
+"amazon_search_term": "Brand + Full Name + \"Model Number\" (e.g. LEGO Technic Porsche 911 RSR \"42096\")", 
+"why_it_fits": "One sentence on why it fits the interests", 
+"lasting_impact": "One sentence on the lasting_impact of gift", 
+"buying_tip": "A specific tip (e.g. 'Ensure it is the Technic version')" }} 
+] 
                 """
                 
                 response = model.generate_content(prompt)
