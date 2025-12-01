@@ -209,6 +209,14 @@ if submitted:
                 1. DIVERSITY: Do not suggest 8 of the same type of thing (e.g. don't do 8 Lego sets). Mix categories (Books, Toys, Gear, Decor, etc.) unless the user asked for one specific thing.
                 2. SEARCHABILITY: The "search_term" must be easily found on Amazon.
                 3. RELEVANCE: Explain exactly why this specific item matches the entered interests.
+
+                IMPORTANT OUTPUT RULES (FOR ALL STRING FIELDS)
+                - All values for "category", "gift_name", "amazon_search_term", "reason", "impact", and "buying_tip"
+                  MUST be plain text only.
+                - Do NOT include any HTML tags (<div>, <strong>, etc.), markdown formatting, bullet points,
+                  or code blocks (no ``` fences).
+                - Each field must be a single-line sentence (you may use punctuation, but no line breaks).
+
                 
                 OUTPUT FORMAT (JSON ARRAY ONLY):
                 [
