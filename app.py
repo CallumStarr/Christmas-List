@@ -160,7 +160,6 @@ st.markdown(
     .stTextArea textarea:focus,
     [data-baseweb="select"] > div:focus-within {
         border: 2px solid #c0392b !important;
-        box-shadow: 0 0 0 1px #c0392b33;
         outline: none;
     }
 
@@ -183,7 +182,6 @@ st.markdown(
         border: none !important;
         padding: 0.6rem 1.2rem !important;
         font-weight: 700 !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
     }
 
     .stButton > button:hover,
