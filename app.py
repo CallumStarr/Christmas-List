@@ -146,13 +146,18 @@ st.markdown(
         margin-bottom: 20px;
     }
 
-       /* Form inputs & select – stop them being purple (container + input) */
+           /* Form inputs & select – stop them being purple (input + textarea + containers) */
     .stTextInput > div > div,
     .stTextInput > div > div > input,
+    .stTextArea > div,
     .stTextArea > div > textarea,
+    .stTextArea textarea,
     [data-baseweb="input"],
     [data-baseweb="input"] > div,
     [data-baseweb="input"] input,
+    [data-baseweb="textarea"],
+    [data-baseweb="textarea"] > div,
+    [data-baseweb="textarea"] textarea,
     [data-baseweb="select"] > div {
         background-color: #ffffff !important;  /* box colour */
         color: #111827 !important;             /* text colour */
@@ -163,7 +168,9 @@ st.markdown(
 
     /* Hover / focus state (container, not just input) */
     .stTextInput > div > div:focus-within,
+    .stTextArea > div:focus-within,
     [data-baseweb="input"]:focus-within,
+    [data-baseweb="textarea"]:focus-within,
     [data-baseweb="select"] > div:focus-within {
         border: 2px solid #c0392b !important;
         box-shadow: 0 0 0 1px #c0392b33 !important;
@@ -175,6 +182,7 @@ st.markdown(
     .stTextArea textarea::placeholder {
         color: #9ca3af;
     }
+
 
     /* Override ALL Streamlit buttons (including form submit) */
     .stButton > button,
