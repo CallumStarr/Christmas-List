@@ -146,21 +146,21 @@ with st.sidebar:
         with col2:
             relation = st.text_input("Who is this for?", placeholder="e.g. Son, Niece")
 
-        Under £25_option = st.select_slider(
+        budget_option = st.select_slider(
             "Budget",
             options=["Under £25", "£25-60", "£60-150", "Over £150"],
             value="£25-60"
         )
         
         # Translate slider to text for AI
-        Under £25_map = {
+        budget_map = {
             "Under £25": f"Under {currency}25",
             "£25-60": f"{currency}25 - {currency}60",
             "£60-150": f"{currency}60 - {currency}150",
             "Over £150": f"Over {currency}150"
         }
-        actual_Under £25 = Under £25_map[Under £25_option]
-        st.caption(f"Targeting: {actual_Under £25}")
+        actual_budget = budget_map[budget_option]
+        st.caption(f"Targeting: {actual_budget}")
 
         interests = st.text_area("🌟 Interests & Obsessions", placeholder="Minecraft, Space, Drawing, Cats...", height=100)
         
@@ -201,7 +201,7 @@ if submitted:
                 - Relationship: {relation}
                 - Interests / hobbies: {interests}
                 - Gift goals: {goals} (e.g. "funny gift", "something they will love", "something they will cherish forever")
-                - Under £25: {actual_Under £25} (total Under £25 for ONE gift, in the currency of the region)
+                - Under £25: {actual_budget} (total Under £25 for ONE gift, in the currency of the region)
                 - Region: {selected_region} (the country/market where the gift will be purchased)
 
                  TASK:
