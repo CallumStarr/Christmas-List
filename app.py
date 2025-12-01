@@ -2,148 +2,216 @@ import streamlit as st
 import google.generativeai as genai
 import json
 import urllib.parse
+import re
+import pandas as pd
 
 # --- CONFIGURATION ---
-# 1. Get your Gemini API Key: https://aistudio.google.com/
-# 2. Configure your Amazon Regions and Affiliate Tags below.
 AMAZON_CONFIG = {
-    "USA (.com)": {
-        "domain": ".com", 
-        "tag": "mcstarrstudio-21", 
-        "currency": "$"
-    },
-        "United Kingdom (.co.uk)": {
-        "domain": ".co.uk", 
-        "tag": "mcstarrstudio-21",  # <--- Perfect!
-        "currency": "£"
-    },
-    "Canada (.ca)": {
-        "domain": ".ca", 
-        "tag": "your-ca-tag-20", 
-        "currency": "C$"
-    },
-    "Australia (.com.au)": {
-        "domain": ".com.au", 
-        "tag": "your-au-tag-20", 
-        "currency": "A$"
-    },
-    "Germany (.de)": {
-        "domain": ".de", 
-        "tag": "your-de-tag-21", 
-        "currency": "€"
-    }
+    "USA (.com)": {"domain": ".com", "tag": "mcstarrstudio-21", "currency": "$"},
+    "United Kingdom (.co.uk)": {"domain": ".co.uk", "tag": "mcstarrstudio-21", "currency": "£"},
+    "Canada (.ca)": {"domain": ".ca", "tag": "your-ca-tag-20", "currency": "C$"},
+    "Australia (.com.au)": {"domain": ".com.au", "tag": "your-au-tag-20", "currency": "A$"},
+    "Germany (.de)": {"domain": ".de", "tag": "your-de-tag-21", "currency": "€"}
 }
 
-st.set_page_config(page_title="AI Christmas Gift Idea Generator", page_icon="🎄", layout="centered")
+# --- PAGE SETUP ---
+st.set_page_config(
+    page_title="Elf-O-Matic | AI Gift Generator", 
+    page_icon="🎁", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # --- CSS STYLING ---
 st.markdown("""
     <style>
+    /* Main Background & Fonts */
+    .stApp {
+        background-color: #f8f9fa;
+    }
+    h1 {
+        color: #d42426; /* Christmas Red */
+        font-family: 'Helvetica', sans-serif;
+        font-weight: 800;
+    }
+    h3 {
+        color: #165b33; /* Pine Green */
+    }
+    
+    /* Gift Card Styling */
     .gift-card {
         background-color: #ffffff;
-        padding: 25px;
-        border-radius: 15px;
-        border: 1px solid #e0e0e0;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        margin-bottom: 25px;
-        transition: transform 0.2s;
+        padding: 20px;
+        border-radius: 12px;
+        border-left: 6px solid #d42426;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
     .gift-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        border-left: 6px solid #165b33;
+    }
+    .gift-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
     }
     .gift-title {
-        font-size: 22px;
-        font-weight: 800;
-        color: #2c3e50;
-        margin-bottom: 10px;
+        font-size: 20px;
+        font-weight: 700;
+        color: #333;
     }
-    .gift-reason {
-        color: #555;
-        font-size: 16px;
-        margin-bottom: 10px;
-        border-left: 4px solid #f1c40f;
-        padding-left: 10px;
-    }
-    .gift-benefit {
-        color: #2980b9;
-        font-size: 15px;
-        background-color: #f0f8ff;
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 15px;
-        border: 1px solid #d6eaf8;
-    }
-    .pro-tip {
-        background-color: #e8f8f5;
-        border: 1px solid #d1f2eb;
-        color: #117a65;
-        padding: 10px;
-        border-radius: 8px;
-        font-size: 14px;
+    .badge {
+        background-color: #e8f5e9;
+        color: #1b5e20;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
         font-weight: 600;
-        margin-bottom: 20px;
+    }
+    .section-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #555;
+        text-transform: uppercase;
+        margin-top: 10px;
+    }
+    .gift-text {
+        color: #444;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+    
+    /* Button Styling */
+    div.stButton > button:first-child {
+        background-color: #d42426;
+        color: white;
+        border-radius: 8px;
+        font-weight: bold;
+        border: none;
+        padding: 10px 20px;
+    }
+    div.stButton > button:first-child:hover {
+        background-color: #b30002;
+        border: none;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- HEADER ---
-st.title("🎄 AI Christmas Gift Idea Generator")
-st.write("Generate a curated list of gift ideas based on the person's interests, your budget, and your goal for the present.")
+# --- SESSION STATE MANAGEMENT ---
+if 'results' not in st.session_state:
+    st.session_state['results'] = None
+if 'generated' not in st.session_state:
+    st.session_state['generated'] = False
 
-# --- INPUT FORM ---
-with st.form("gift_form"):
-    selected_region = st.selectbox("Select Amazon Region", list(AMAZON_CONFIG.keys()))
-    region_data = AMAZON_CONFIG[selected_region]
-    currency_symbol = region_data["currency"]
+# --- HELPER FUNCTION: CLEAN JSON ---
+def extract_json(text):
+    """Robust JSON extraction from LLM response"""
+    try:
+        # Try finding the first [ and last ]
+        match = re.search(r'\[.*\]', text, re.DOTALL)
+        if match:
+            return json.loads(match.group())
+        else:
+            # Fallback if no brackets found (rare with Gemini JSON mode)
+            return json.loads(text)
+    except Exception as e:
+        return []
+
+# --- SIDEBAR INPUTS ---
+with st.sidebar:
+    st.title("🎅 Elf-O-Matic 3000")
+    st.markdown("Configure your search:")
     
-    col1, col2 = st.columns(2)
-    with col1:
-        age = st.text_input("Age Group", placeholder="e.g. 3 year old")
-    with col2:
-        budget = st.selectbox("Budget", [
-            "Any", 
-            f"Under {currency_symbol}20", 
-            f"{currency_symbol}20 - {currency_symbol}50", 
-            f"{currency_symbol}50+"
-        ])
+    # 1. API Configuration
+    try:
+        genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+        api_ok = True
+    except (FileNotFoundError, KeyError):
+        st.error("⚠️ API Key Missing! Set GOOGLE_API_KEY in secrets.")
+        api_ok = False
 
-    interests = st.text_area("Person's Interests", placeholder="e.g. Paw Patrol, muddy puddles, dinosaurs")
-    goals = st.text_input("Goal of Gift", placeholder="e.g. Fun, Silly, Main gift that they will love")
-    
-    submitted = st.form_submit_button("Generate Gift List")
+    # 2. User Inputs
+    with st.form("gift_form"):
+        selected_region = st.selectbox("🌎 Amazon Region", list(AMAZON_CONFIG.keys()))
+        region_data = AMAZON_CONFIG[selected_region]
+        currency = region_data["currency"]
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            age = st.text_input("Age", placeholder="e.g. 7 years old")
+        with col2:
+            relation = st.text_input("Who is this for?", placeholder="e.g. Son, Niece")
 
-# --- MAIN LOGIC ---
+        budget_option = st.select_slider(
+            "Budget Per Gift",
+            options=["Budget", "Mid-Range", "Premium", "Splurge"],
+            value="Mid-Range"
+        )
+        
+        # Translate slider to text for AI
+        budget_map = {
+            "Budget": f"Under {currency}25",
+            "Mid-Range": f"{currency}25 - {currency}60",
+            "Premium": f"{currency}60 - {currency}150",
+            "Splurge": f"Over {currency}150"
+        }
+        actual_budget = budget_map[budget_option]
+        st.caption(f"Targeting: {actual_budget}")
+
+        interests = st.text_area("🌟 Interests & Obsessions", placeholder="Minecraft, Space, Drawing, Cats...", height=100)
+        
+        goals = st.text_area("🎯 Gift Goal / Vibe", placeholder="Educational but fun, Main 'Big' Gift, Keepsake...", height=70)
+
+        submitted = st.form_submit_button("Generate Christmas List 🎁")
+
+# --- MAIN CONTENT AREA ---
+
+st.title("🎄 Curated Christmas List Generator")
+st.markdown(f"**Current Region:** {selected_region} | **Affiliate Mode:** Active")
+
+if not api_ok:
+    st.warning("Please configure your API key to proceed.")
+    st.stop()
+
+# --- GENERATION LOGIC ---
 if submitted:
-    if not interests:
-        st.warning("Please tell the generator what the person likes!")
+    if not interests or not age:
+        st.error("⚠️ Please enter at least an Age and Interests.")
     else:
-        # 1. SETUP API KEY
-        try:
-            genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-        except (FileNotFoundError, KeyError):
-            st.error("API Key missing. Please set GOOGLE_API_KEY in Streamlit secrets.")
-            st.stop()
-
-        with st.spinner("✨ Checking with the Elves..."):
+        st.session_state['generated'] = False # Reset
+        
+        with st.status("✨ The Elves are working...", expanded=True) as status:
             try:
-                # 2. SELECT MODEL
-                model = genai.GenerativeModel('gemini-flash-latest')
+                model = genai.GenerativeModel('gemini-1.5-flash') # Use lighter, faster model
                 
-                # 3. PROMPT (The Gold Standard Logic)
-                prompt = f"""
+                status.write("🔍 Analyzing interests...")
+                status.write("🎁 Checking Amazon inventory (simulated)...")
+                
+                 prompt = f"""
                 ROLE: You are an expert personal gift shopper, specialising in thoughtful, high-converting Christmas gifts.
-
                 Your task:
                 Use the inputs below to recommend exactly 10 specific gift ideas that feel tailored, age-appropriate, and genuinely impressive.
-                
-                Inputs:
-                - Age: {age}
+                                
+                CONTEXT:
+                - Recipient Age: {age}
+                - Relationship: {relation}
                 - Interests / hobbies: {interests}
                 - Gift goals: {goals} (e.g. "funny gift", "something they will love", "something they will cherish forever")
-                - Budget: {budget} (total budget for ONE gift, in the currency of the region)
+                - Budget: {actual_budget} (total budget for ONE gift, in the currency of the region)
                 - Region: {selected_region} (the country/market where the gift will be purchased)
+
+                 TASK:
+                Generate a JSON list of exactly 8 highly specific gift ideas.
                 
+                CRITERIA:
+                1. DIVERSITY: Do not suggest 8 of the same type of thing (e.g. don't do 8 Lego sets). Mix categories (Books, Toys, Gear, Decor, etc.) unless the user asked for one specific thing.
+                2. SEARCHABILITY: The "search_term" must be easily found on Amazon.
+                3. RELEVANCE: Explain exactly why this specific item matches the entered interests.
+                               
                 GENERAL BEHAVIOUR
                 - Think like a human personal shopper who really understands the recipient and the buyer’s intent.
                 - Assume these are Christmas gifts: it is fine to subtly reference the festive/holiday context, but core fit and usefulness matter more than being "gimmicky".
@@ -220,76 +288,98 @@ if submitted:
                     - "Make sure you select the Mini 12 model, not the older Mini 9."
                     - "Choose the correct size based on their usual UK shoe size."
                 
-                OUTPUT FORMAT (STRICT)
-                - You must return ONLY valid JSON.
-                - No markdown, no backticks, no comments, no explanations.
-                - Return a JSON array of EXACTLY 10 objects.
-                - Use double quotes for all keys and string values.
-                - Do NOT include trailing commas.
+                OUTPUT FORMAT (JSON ARRAY ONLY):
+                [
+                    {{
+                        "category": "Creative / Tech / Outdoor (Pick one)",
+                        "gift_name": "Specific Product Name",
+                        "amazon_search_term": "Brand Name Product Name Model",
+                        "reason": "Why it fits their interests",
+                        "impact": "Long term benefit",
+                        "buying_tip": "Specific check (e.g. check batteries)"
+                ]
+                """            
                 
-                Each object in the array MUST have exactly these keys and no others:
-                - "gift_name"
-                - "amazon_search_term"
-                - "why_it_fits"
-                - "lasting_impact"
-                - "buying_tip"
+                # Request JSON mode specifically
+                response = model.generate_content(
+                    prompt,
+                    generation_config={"response_mime_type": "application/json"}
+                )
                 
-                Return strictly JSON: 
-                {{
-                    "gift_name": "Display Name (e.g. LEGO Technic Porsche 911 RSR)",
-                    "amazon_search_term": "Brand + Full Name + \"Model Number\" (e.g. LEGO Technic Porsche 911 RSR \"42096\")",
-                    "why_it_fits": "One sentence on why it fits the interests",
-                    "lasting_impact": "One sentence on the lasting_impact of gift",
-                    "buying_tip": "A specific tip (e.g. 'Ensure it is the Technic version')" 
-                }} 
-                    """
+                data = extract_json(response.text)
+                st.session_state['results'] = data
+                st.session_state['generated'] = True
+                status.update(label="✅ List Ready!", state="complete", expanded=False)
                 
-                response = model.generate_content(prompt)
-                clean_text = response.text.replace('```json', '').replace('```', '').strip()
-                gift_data = json.loads(clean_text)
-
-                st.subheader(f"🎁 Top Picks for {age}")
-
-                # 4. DISPLAY LOOP
-                for gift in gift_data:
-                    name = gift.get('gift_name', 'Mystery Gift')
-                    # Fallback: if AI fails to give search term, use name
-                    search_term = gift.get('amazon_search_term', name) 
-                    
-                    reason = gift.get('why_it_fits', 'Fits your criteria perfectly.')
-                    benefit = gift.get('lasting_impact', 'Great gift idea.')
-                    tip = gift.get('buying_tip', f"Look for the highest rated version of {name}")
-                    
-                    # Generate Regional Link using the OPTIMIZED Search Term
-                    domain = region_data["domain"]
-                    tag = region_data["tag"]
-                    
-                    # We encode the search term to be URL safe (quotes become %22)
-                    encoded_search = urllib.parse.quote(search_term)
-                    amazon_link = f"https://www.amazon{domain}/s?k={encoded_search}&tag={tag}"
-
-                    # Layout
-                    with st.container():
-                        st.markdown(f"""
-                        <div class="gift-card">
-                            <div class="gift-title">{name}</div>
-                            <div class="gift-reason">💡 {reason}</div>
-                            <div class="gift-benefit">🎓 {benefit}</div>
-                            <div class="pro-tip">✨ <strong>Pro Tip:</strong> {tip}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # Button Label: We show the search term but remove quotes so it looks nice
-                        clean_label = search_term.replace('"', '')
-                        
-                        st.link_button(
-                            label=f"👉 Find '{clean_label}' on Amazon{domain}", 
-                            url=amazon_link,
-                            type="primary",
-                            use_container_width=True
-                        )
-                        
-                        st.write(" ") 
-
             except Exception as e:
-                st.error(f"The Elves encountered a glitch: {e}")
+                st.error(f"Elves dropped the list: {e}")
+
+# --- DISPLAY RESULTS ---
+if st.session_state['generated'] and st.session_state['results']:
+    
+    results = st.session_state['results']
+    
+    # 1. Action Bar (CSV Download)
+    df = pd.DataFrame(results)
+    csv = df.to_csv(index=False).encode('utf-8')
+    
+    col_d1, col_d2 = st.columns([8, 2])
+    with col_d2:
+        st.download_button(
+            "📥 Download List",
+            data=csv,
+            file_name="christmas_list.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+
+    # 2. Grid Layout for Cards
+    for i, gift in enumerate(results):
+        # Create valid Amazon Link
+        domain = region_data["domain"]
+        tag = region_data["tag"]
+        raw_term = gift.get('amazon_search_term', gift.get('gift_name'))
+        encoded_term = urllib.parse.quote(raw_term.replace('"', ''))
+        link = f"https://www.amazon{domain}/s?k={encoded_term}&tag={tag}"
+        
+        # Display logic
+        with st.container():
+            st.markdown(f"""
+            <div class="gift-card">
+                <div class="gift-header">
+                    <div class="gift-title">{i+1}. {gift['gift_name']}</div>
+                    <span class="badge">{gift.get('category', 'Gift')}</span>
+                </div>
+                <div class="section-title">Why they'll love it</div>
+                <div class="gift-text">{gift['reason']}</div>
+                
+                <div class="section-title">Lasting Impact</div>
+                <div class="gift-text"><i>{gift['impact']}</i></div>
+                
+                <div style="margin-top:15px; font-size:13px; color:#d68910;">
+                    <strong>⚠️ Tip:</strong> {gift['buying_tip']}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Use columns to keep the button from stretching too wide
+            b_col1, b_col2, b_col3 = st.columns([1, 2, 1])
+            with b_col2:
+                st.link_button(
+                    label=f"👉 Check Price on Amazon{domain}", 
+                    url=link,
+                    type="primary", 
+                    use_container_width=True
+                )
+            st.write("") # Spacer
+
+elif not submitted:
+    # Empty State / Landing info
+    st.info("👈 Use the sidebar to tell the Elves about the recipient!")
+    st.markdown("""
+    ### How it works
+    1. **Tell us who it's for:** Age, relationship, and what they love.
+    2. **Set your goal:** Are you looking for a 'Main Gift', a 'Stocking Filler', or something educational?
+    3. **Get a curated list:** The AI checks for products that fit your description and budget.
+    4. **Click to buy:** Direct links to search your local Amazon store.
+    """)
