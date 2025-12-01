@@ -16,8 +16,8 @@ AMAZON_CONFIG = {
 
 # --- PAGE SETUP ---
 st.set_page_config(
-    page_title="AI Christmas Gift Idea Generator", 
-    page_icon="🎁", 
+    page_title="AI Christmas Gift Idea Generator",
+    page_icon="🎁",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -37,7 +37,7 @@ st.markdown("""
     h3 {
         color: #165b33; /* Pine Green */
     }
-    
+
     /* Gift Card Styling */
     .gift-card {
         background-color: #ffffff;
@@ -84,7 +84,7 @@ st.markdown("""
         font-size: 15px;
         line-height: 1.5;
     }
-    
+
     /* Button Styling */
     div.stButton > button:first-child {
         background-color: #d42426;
@@ -121,11 +121,25 @@ def extract_json(text):
     except Exception as e:
         return []
 
+def clean_text_field(value: str) -> str:
+    if not isinstance(value, str):
+        value = str(value)
+
+    # Remove fenced code blocks ```...```
+    value = re.sub(r"```.*?```", "", value, flags=re.DOTALL)
+
+    # Strip any HTML tags just in case
+    value = re.sub(r"<[^>]+>", "", value)
+
+    # Collapse whitespace
+    value = re.sub(r"\s+", " ", value).strip()
+    return value
+
 # --- SIDEBAR INPUTS ---
 with st.sidebar:
     st.title("🎅 AI Christmas Gift Idea Generator")
     st.markdown("Configure your search:")
-    
+
     # 1. API Configuration
     try:
         genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
@@ -139,7 +153,7 @@ with st.sidebar:
         selected_region = st.selectbox("🌎 Amazon Region", list(AMAZON_CONFIG.keys()))
         region_data = AMAZON_CONFIG[selected_region]
         currency = region_data["currency"]
-        
+
         col1, col2 = st.columns(2)
         with col1:
             age = st.text_input("Age", placeholder="e.g. 7 years old")
@@ -151,7 +165,7 @@ with st.sidebar:
             options=["Under £25", "£25-60", "£60-150", "Over £150"],
             value="£25-60"
         )
-        
+
         # Translate slider to text for AI
         budget_map = {
             "Under £25": f"Under {currency}25",
@@ -163,7 +177,7 @@ with st.sidebar:
         st.caption(f"Targeting: {actual_budget}")
 
         interests = st.text_area("🌟 Interests & Obsessions", placeholder="Minecraft, Space, Drawing, Cats...", height=100)
-        
+
         goals = st.text_area("🎯 Gift Goal / Vibe", placeholder="Educational but fun, Main 'Big' Gift, Keepsake...", height=70)
 
         submitted = st.form_submit_button("Generate Christmas List 🎁")
@@ -182,15 +196,15 @@ if submitted:
     if not interests or not age:
         st.error("⚠️ Please enter at least an Age and Interests.")
     else:
-        st.session_state['generated'] = False # Reset
-        
+        st.session_state['generated'] = False  # Reset
+
         with st.status("✨ The Elves are working...", expanded=True) as status:
             try:
-                model = genai.GenerativeModel('gemini-flash-latest') # Use lighter, faster model
-                
+                model = genai.GenerativeModel('gemini-flash-latest')  # Use lighter, faster model
+
                 status.write("🔍 Analyzing interests...")
                 status.write("🎁 Checking Amazon inventory (simulated)...")
-                
+
                 prompt = f"""
                 ROLE: You are an expert personal gift shopper, specialising in thoughtful, high-converting Christmas gifts.
                 Your task:
@@ -237,7 +251,7 @@ if submitted:
                   - Treat the "Interests / hobbies" as your primary guide: every gift should clearly relate to at least one of these interests.
                   - Avoid suggesting products that are only weakly related to the interests, even if they are popular gifts in general.
 
-                
+
                 AMAZON SEARCH TERM (CRITICAL RULES)
                 - Every gift must be something that a shopper could plausibly find on Amazon in the specified region.
                 - You must construct the "amazon_search_term" by combining:
@@ -263,7 +277,7 @@ if submitted:
                   or code blocks (no ``` fences).
                 - Each field must be a single-line sentence (you may use punctuation, but no line breaks).
 
-                
+
                 - "gift_name":
                   - Short, clear, appealing display name.
                   - Should sound like a product title someone would recognise on a listing.
@@ -305,64 +319,30 @@ if submitted:
                         "impact": "Long term benefit",
                         "buying_tip": "Specific check (e.g. check batteries)"
                 ]
-                """            
-                
+                """
                 # Request JSON mode specifically
                 response = model.generate_content(
                     prompt,
                     generation_config={"response_mime_type": "application/json"}
                 )
-                
+
                 data = extract_json(response.text)
                 st.session_state['results'] = data
                 st.session_state['generated'] = True
                 status.update(label="✅ List Ready!", state="complete", expanded=False)
-                
+
             except Exception as e:
                 st.error(f"Elves dropped the list: {e}")
 
 # --- DISPLAY RESULTS ---
 if st.session_state['generated'] and st.session_state['results']:
-    
+
     results = st.session_state['results']
 
-for i, gift in enumerate(results):
-    name = clean_text_field(gift.get('gift_name', 'Mystery Gift'))
-    category = clean_text_field(gift.get('category', 'Gift'))
-    reason = clean_text_field(gift.get('reason', 'Fits your criteria perfectly.'))
-    impact = clean_text_field(gift.get('impact', 'This gift will have a positive, lasting impact.'))
-    tip = clean_text_field(gift.get('buying_tip', f"Look for the highest rated version of {name}"))
-
-    domain = region_data["domain"]
-    tag = region_data["tag"]
-    raw_term = gift.get('amazon_search_term', name)
-    raw_term = clean_text_field(raw_term)
-    encoded_term = urllib.parse.quote(raw_term.replace('"', ''))
-    link = f"https://www.amazon{domain}/s?k={encoded_term}&tag={tag}"
-
-    st.markdown(f"""
-    <div class="gift-card">
-        <div class="gift-header">
-            <div class="gift-title">{i+1}. {name}</div>
-            <span class="badge">{category}</span>
-        </div>
-        <div class="section-title">Why they'll love it</div>
-        <div class="gift-text">{reason}</div>
-
-        <div class="section-title">Lasting Impact</div>
-        <div class="gift-text"><i>{impact}</i></div>
-
-        <div style="margin-top:15px; font-size:13px; color:#d68910;">
-            <strong>⚠️ Tip:</strong> {tip}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    
     # 1. Action Bar (CSV Download)
     df = pd.DataFrame(results)
     csv = df.to_csv(index=False).encode('utf-8')
-    
+
     col_d1, col_d2 = st.columns([8, 2])
     with col_d2:
         st.download_button(
@@ -375,43 +355,49 @@ for i, gift in enumerate(results):
 
     # 2. Grid Layout for Cards
     for i, gift in enumerate(results):
+        name = clean_text_field(gift.get('gift_name', 'Mystery Gift'))
+        category = clean_text_field(gift.get('category', 'Gift'))
+        reason = clean_text_field(gift.get('reason', 'Fits your criteria perfectly.'))
+        impact = clean_text_field(gift.get('impact', 'This gift will have a positive, lasting impact.'))
+        tip = clean_text_field(gift.get('buying_tip', f"Look for the highest rated version of {name}"))
+
         # Create valid Amazon Link
         domain = region_data["domain"]
         tag = region_data["tag"]
-        raw_term = gift.get('amazon_search_term', gift.get('gift_name'))
+        raw_term = clean_text_field(gift.get('amazon_search_term', name))
         encoded_term = urllib.parse.quote(raw_term.replace('"', ''))
         link = f"https://www.amazon{domain}/s?k={encoded_term}&tag={tag}"
-        
+
         # Display logic
         with st.container():
             st.markdown(f"""
             <div class="gift-card">
                 <div class="gift-header">
-                    <div class="gift-title">{i+1}. {gift['gift_name']}</div>
-                    <span class="badge">{gift.get('category', 'Gift')}</span>
+                    <div class="gift-title">{i+1}. {name}</div>
+                    <span class="badge">{category}</span>
                 </div>
                 <div class="section-title">Why they'll love it</div>
-                <div class="gift-text">{gift['reason']}</div>
-                
+                <div class="gift-text">{reason}</div>
+
                 <div class="section-title">Lasting Impact</div>
-                <div class="gift-text"><i>{gift['impact']}</i></div>
-                
+                <div class="gift-text"><i>{impact}</i></div>
+
                 <div style="margin-top:15px; font-size:13px; color:#d68910;">
-                    <strong>⚠️ Tip:</strong> {gift['buying_tip']}
+                    <strong>⚠️ Tip:</strong> {tip}
                 </div>
             </div>
             """, unsafe_allow_html=True)
-            
+
             # Use columns to keep the button from stretching too wide
             b_col1, b_col2, b_col3 = st.columns([1, 2, 1])
             with b_col2:
                 st.link_button(
-                    label=f"👉 Check Price on Amazon{domain}", 
+                    label=f"👉 Check Price on Amazon{domain}",
                     url=link,
-                    type="primary", 
+                    type="primary",
                     use_container_width=True
                 )
-            st.write("") # Spacer
+            st.write("")  # Spacer
 
 elif not submitted:
     # Empty State / Landing info
@@ -423,18 +409,3 @@ elif not submitted:
     3. **Get a curated list:** The AI checks for products that fit your description and Under £25.
     4. **Click to buy:** Direct links to search your local Amazon store.
     """)
-
-def clean_text_field(value: str) -> str:
-    if not isinstance(value, str):
-        value = str(value)
-
-    # Remove fenced code blocks ```...```
-    value = re.sub(r"```.*?```", "", value, flags=re.DOTALL)
-
-    # Strip any HTML tags just in case
-    value = re.sub(r"<[^>]+>", "", value)
-
-    # Collapse whitespace
-    value = re.sub(r"\s+", " ", value).strip()
-    return value
-
