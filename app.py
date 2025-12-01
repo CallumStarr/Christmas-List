@@ -146,21 +146,21 @@ with st.sidebar:
         with col2:
             relation = st.text_input("Who is this for?", placeholder="e.g. Son, Niece")
 
-        budget_option = st.select_slider(
-            "Budget Per Gift",
-            options=["Budget", "Mid-Range", "Premium", "Splurge"],
-            value="Mid-Range"
+        Under £25_option = st.select_slider(
+            "Budget",
+            options=["Under £25", "£25-60", "£60-150", "Over £150"],
+            value="£25-60"
         )
         
         # Translate slider to text for AI
-        budget_map = {
-            "Budget": f"Under {currency}25",
-            "Mid-Range": f"{currency}25 - {currency}60",
-            "Premium": f"{currency}60 - {currency}150",
-            "Splurge": f"Over {currency}150"
+        Under £25_map = {
+            "Under £25": f"Under {currency}25",
+            "£25-60": f"{currency}25 - {currency}60",
+            "£60-150": f"{currency}60 - {currency}150",
+            "Over £150": f"Over {currency}150"
         }
-        actual_budget = budget_map[budget_option]
-        st.caption(f"Targeting: {actual_budget}")
+        actual_Under £25 = Under £25_map[Under £25_option]
+        st.caption(f"Targeting: {actual_Under £25}")
 
         interests = st.text_area("🌟 Interests & Obsessions", placeholder="Minecraft, Space, Drawing, Cats...", height=100)
         
@@ -201,7 +201,7 @@ if submitted:
                 - Relationship: {relation}
                 - Interests / hobbies: {interests}
                 - Gift goals: {goals} (e.g. "funny gift", "something they will love", "something they will cherish forever")
-                - Budget: {actual_budget} (total budget for ONE gift, in the currency of the region)
+                - Under £25: {actual_Under £25} (total Under £25 for ONE gift, in the currency of the region)
                 - Region: {selected_region} (the country/market where the gift will be purchased)
 
                  TASK:
@@ -219,9 +219,9 @@ if submitted:
                 - Ensure every suggestion is age-appropriate and safe:
                   - Avoid small parts and unsafe items for young children.
                   - Avoid adult themes/content for minors.
-                - STRICTLY respect the budget:
-                  - Only suggest gifts that can realistically be bought at or under the specified budget in the given region.
-                  - If the budget is very low, favour small but thoughtful and creative ideas instead of unrealistic high-ticket items.
+                - STRICTLY respect the Under £25:
+                  - Only suggest gifts that can realistically be bought at or under the specified Under £25 in the given region.
+                  - If the Under £25 is very low, favour small but thoughtful and creative ideas instead of unrealistic high-ticket items.
                 - Be SPECIFIC, not generic:
                   - Suggest concrete products that a person could actually search for on Amazon.
                   - Prefer recognisable product lines and brands when possible (e.g. "Nintendo Switch Lite", "Fujifilm Instax Mini 12 Instant Camera", "Stanley Classic Quencher Tumbler", "Catan Board Game", not "(generic) Board Game".
@@ -380,6 +380,6 @@ elif not submitted:
     ### How it works
     1. **Tell us who it's for:** Age, relationship, and what they love.
     2. **Set your goal:** Are you looking for a 'Main Gift', a 'Stocking Filler', or something educational?
-    3. **Get a curated list:** The AI checks for products that fit your description and budget.
+    3. **Get a curated list:** The AI checks for products that fit your description and Under £25.
     4. **Click to buy:** Direct links to search your local Amazon store.
     """)
