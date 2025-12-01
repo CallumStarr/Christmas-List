@@ -368,8 +368,7 @@ if st.session_state['generated'] and st.session_state['results']:
         encoded_term = urllib.parse.quote(raw_term.replace('"', ''))
         link = f"https://www.amazon{domain}/s?k={encoded_term}&tag={tag}"
 
-
-            # Use columns to keep the button from stretching too wide
+       # Use columns to keep the button from stretching too wide
             b_col1, b_col2, b_col3 = st.columns([1, 2, 1])
             with b_col2:
                 st.link_button(
