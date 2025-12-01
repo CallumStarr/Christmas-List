@@ -209,26 +209,6 @@ st.markdown(
         transform: translateY(-1px);
     }
 
-    /* Nuclear fix: completely restyle the form submit button only */
-    button[data-testid="baseButton-secondaryFormSubmit"] {
-        all: unset;  /* wipe Streamlit's default styles */
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.6rem 1.2rem;
-        border-radius: 999px;
-        background: linear-gradient(135deg, #c0392b, #e74c3c);
-        color: #ffffff;
-        font-weight: 700;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-        cursor: pointer;
-    }
-
-    button[data-testid="baseButton-secondaryFormSubmit"]:hover {
-        background: linear-gradient(135deg, #a93226, #cd6155);
-        transform: translateY(-1px);
-    }
-
     /* Optional: hide Streamlit menu/footer to keep it clean */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -256,6 +236,31 @@ st.markdown(
     @keyframes snowflakes-shake {
         0%, 100% {transform: translateX(0);}
         50% {transform: translateX(20px);}
+    }
+
+        /* Final override: style the st.form submit button */
+    .stFormSubmitButton > button {
+        all: unset !important;  /* wipe Streamlit theme styles */
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+
+        padding: 0.6rem 1.2rem !important;
+        border-radius: 999px !important;
+
+        background: linear-gradient(135deg, #c0392b, #e74c3c) !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-family: inherit !important;
+
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+        cursor: pointer !important;
+        border: none !important;
+    }
+
+    .stFormSubmitButton > button:hover {
+        background: linear-gradient(135deg, #a93226, #cd6155) !important;
+        transform: translateY(-1px);
     }
     </style>
     """,
