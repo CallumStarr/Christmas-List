@@ -58,7 +58,7 @@ st.markdown(
     [data-testid="stMarkdownContainer"],
     [data-testid="stMarkdownContainer"] p,
     label {
-        color: #290303 !important;   /* nice dark grey */
+        color: #2c3e50 !important;   /* nice dark grey */
     }
 
     /* Make section headings (like "Top Picks") festive red */
@@ -169,7 +169,7 @@ st.markdown(
     /* Placeholder text colour */
     .stTextInput > div > div > input::placeholder,
     .stTextArea textarea::placeholder {
-        color: #b54e4e;
+        color: #9ca3af;
     }
 
     /* Override ALL Streamlit buttons (including form submit) */
