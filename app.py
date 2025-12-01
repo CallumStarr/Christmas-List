@@ -52,6 +52,18 @@ st.markdown(
             #e8f5e9 100%);
         background-attachment: fixed;
     }
+        /* Global text colours (override Streamlit's white text) */
+    h2, h3, h4, h5, h6,
+    [data-testid="stMarkdownContainer"],
+    [data-testid="stMarkdownContainer"] p,
+    label {
+        color: #2c3e50 !important;   /* nice dark grey */
+    }
+
+    /* Make section headings (like "Top Picks") festive red */
+    h2, h3 {
+        color: #b22222 !important;
+    }
 
     /* Make the header feel festive */
     h1 {
