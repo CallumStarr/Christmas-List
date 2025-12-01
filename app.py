@@ -370,7 +370,7 @@ if st.session_state['generated'] and st.session_state['results']:
 
        # Use columns to keep the button from stretching too wide
         b_col1, b_col2, b_col3 = st.columns([1, 2, 1])
-            with b_col2:
+        with b_col2:
                 st.link_button(
                     label=f"👉 Check Price on Amazon{domain}", 
                     url=link,
