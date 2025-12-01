@@ -16,7 +16,7 @@ AMAZON_CONFIG = {
 
 # --- PAGE SETUP ---
 st.set_page_config(
-    page_title="Elf-O-Matic | AI Gift Generator", 
+    page_title="AI Christmas Gift Idea Generator", 
     page_icon="🎁", 
     layout="wide",
     initial_sidebar_state="expanded"
@@ -123,7 +123,7 @@ def extract_json(text):
 
 # --- SIDEBAR INPUTS ---
 with st.sidebar:
-    st.title("🎅 Elf-O-Matic 3000")
+    st.title("🎅 AI Christmas Gift Idea Generator")
     st.markdown("Configure your search:")
     
     # 1. API Configuration
