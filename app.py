@@ -58,7 +58,7 @@ st.markdown(
     [data-testid="stMarkdownContainer"],
     [data-testid="stMarkdownContainer"] p,
     label {
-        color: #D3D3D3 !important;   /* nice dark grey */
+        color: #2c3e50 !important;   /* nice dark grey */
     }
 
     /* Make section headings (like "Top Picks") festive red */
@@ -86,6 +86,7 @@ st.markdown(
         padding: 25px;
         border-radius: 18px;
         border: 2px solid #c0392b;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.08);
         margin-bottom: 25px;
         transition: transform 0.2s, box-shadow 0.2s;
         position: relative;
@@ -149,10 +150,11 @@ st.markdown(
     .stTextInput > div > div > input,
     .stTextArea textarea,
     [data-baseweb="select"] > div {
-        background-color: #e6c1c1 !important;  /* box colour */
-        color: #0a1224 !important;             /* text colour */
+        background-color: #ffffff !important;  /* box colour */
+        color: #111827 !important;             /* text colour */
         border-radius: 12px;
         border: 1px solid #c0392b;             /* festive red border */
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
 
     /* Hover / focus state */
@@ -160,6 +162,7 @@ st.markdown(
     .stTextArea textarea:focus,
     [data-baseweb="select"] > div:focus-within {
         border: 2px solid #c0392b !important;
+        box-shadow: 0 0 0 1px #c0392b33;
         outline: none;
     }
 
@@ -177,11 +180,12 @@ st.markdown(
     button[data-testid="baseButton-primary"],
     a[role="button"] {
         background: linear-gradient(135deg, #c0392b, #e74c3c) !important;
-        color: #FF0000 !important;
+        color: #ffffff !important;
         border-radius: 999px !important;
         border: none !important;
         padding: 0.6rem 1.2rem !important;
         font-weight: 700 !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
     }
 
     .stButton > button:hover,
@@ -193,25 +197,6 @@ st.markdown(
         background: linear-gradient(135deg, #a93226, #cd6155) !important;
         transform: translateY(-1px);
     }
-
-        /* Extra safety: catch the form submit button specifically */
-    form button,
-    button[type="submit"] {
-        background: linear-gradient(135deg, #c0392b, #e74c3c) !important;
-        color: #ffffff !important;
-        border-radius: 999px !important;
-        border: none !important;
-        padding: 0.6rem 1.2rem !important;
-        font-weight: 700 !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
-    }
-
-    form button:hover,
-    button[type="submit"]:hover {
-        background: linear-gradient(135deg, #a93226, #cd6155) !important;
-        transform: translateY(-1px);
-    }
-
 
     /* Optional: hide Streamlit menu/footer to keep it clean */
     #MainMenu {visibility: hidden;}
