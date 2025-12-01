@@ -275,10 +275,7 @@ if st.session_state['generated'] and st.session_state['results']:
                 </div>
                 <div class="section-title">Why they'll love it</div>
                 <div class="gift-text">{gift['reason']}</div>
-                
-                <div class="section-title">Lasting Impact</div>
-                <div class="gift-text"><i>{gift['impact']}</i></div>
-                
+                        
                 <div style="margin-top:15px; font-size:13px; color:#d68910;">
                     <strong>⚠️ Tip:</strong> {gift['buying_tip']}
                 </div>
