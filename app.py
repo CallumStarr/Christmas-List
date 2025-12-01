@@ -256,6 +256,13 @@ if submitted:
                 
                 FIELD-LEVEL GUIDELINES
                 For each gift, follow these rules:
+                IMPORTANT OUTPUT RULES (FOR ALL STRING FIELDS)
+                - All values for "category", "gift_name", "amazon_search_term", "reason", "impact", and "buying_tip"
+                  MUST be plain text only.
+                - Do NOT include any HTML tags (<div>, <strong>, etc.), markdown formatting, bullet points,
+                  or code blocks (no ``` fences).
+                - Each field must be a single-line sentence (you may use punctuation, but no line breaks).
+
                 
                 - "gift_name":
                   - Short, clear, appealing display name.
