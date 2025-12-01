@@ -36,7 +36,7 @@ AMAZON_CONFIG = {
 
 st.set_page_config(
     page_title="AI Christmas Gift Idea Generator",
-    page_icon="🎄",
+    page_icon="🎅",
     layout="centered"
 )
 
@@ -44,61 +44,153 @@ st.set_page_config(
 st.markdown(
     """
     <style>
+    /* Overall app background */
+    [data-testid="stAppViewContainer"] {
+        background: radial-gradient(circle at top,
+            #ffe6e6 0,
+            #fff8e1 40%,
+            #e8f5e9 100%);
+        background-attachment: fixed;
+    }
+
+    /* Make the header feel festive */
+    h1 {
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        text-align: center;
+        color: #b22222;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        margin-bottom: 0.5rem;
+    }
+
+    /* Subtext under the title */
+    .block-container p {
+        text-align: center;
+    }
+
+    /* Gift card styling – like little presents */
     .gift-card {
-        background-color: #ffffff;
+        background: rgba(255, 255, 255, 0.95);
         padding: 25px;
-        border-radius: 15px;
-        border: 1px solid #e0e0e0;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border-radius: 18px;
+        border: 2px solid #c0392b;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.08);
         margin-bottom: 25px;
-        transition: transform 0.2s;
+        transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
+        overflow: hidden;
+    }
+    .gift-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(#b71c1c, #b71c1c) 50% 0 / 4px 100% no-repeat,
+            linear-gradient(#b71c1c, #b71c1c) 0 50% / 100% 4px no-repeat;
+        opacity: 0.15;
+        pointer-events: none;
     }
     .gift-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.15);
     }
+
     .gift-title {
         font-size: 22px;
         font-weight: 800;
-        color: #2c3e50;
+        color: #b22222;
         margin-bottom: 10px;
     }
+
     .gift-reason {
-        color: #555;
+        color: #2f4f4f;
         font-size: 16px;
         margin-bottom: 10px;
-        border-left: 4px solid #f1c40f;
+        border-left: 4px solid #27ae60;
         padding-left: 10px;
+        background: #f0fff4;
     }
+
     .gift-benefit {
-        color: #2980b9;
+        color: #145a32;
         font-size: 15px;
-        background-color: #f0f8ff;
+        background: #e8f5e9;
         padding: 12px;
         border-radius: 8px;
         margin-bottom: 15px;
-        border: 1px solid #d6eaf8;
+        border: 1px solid #c8e6c9;
     }
+
     .pro-tip {
-        background-color: #e8f8f5;
-        border: 1px solid #d1f2eb;
-        color: #117a65;
+        background: #fff7e6;
+        border: 1px solid #f1c40f;
+        color: #8e5b00;
         padding: 10px;
         border-radius: 8px;
         font-size: 14px;
         font-weight: 600;
         margin-bottom: 20px;
     }
+
+    /* Make buttons look like Christmas tags */
+    .stButton > button, a[role="button"] {
+        background: linear-gradient(135deg, #c0392b, #e74c3c);
+        color: white !important;
+        border-radius: 999px;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        font-weight: 700;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .stButton > button:hover, a[role="button"]:hover {
+        background: linear-gradient(135deg, #a93226, #cd6155);
+        transform: translateY(-1px);
+    }
+
+    /* Optional: hide Streamlit menu/footer to keep it clean */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+
+    /* SIMPLE SNOWFALL EFFECT */
+    .snowflake {
+        position: fixed;
+        top: -10px;
+        color: #ffffff;
+        font-size: 18px;
+        opacity: 0.85;
+        pointer-events: none;
+        animation-name: snowflakes-fall, snowflakes-shake;
+        animation-duration: 10s, 3s;
+        animation-timing-function: linear, ease-in-out;
+        animation-iteration-count: infinite, infinite;
+    }
+
+    @keyframes snowflakes-fall {
+        0% {top: -10%;}
+        100% {top: 110%;}
+    }
+    @keyframes snowflakes-shake {
+        0%, 100% {transform: translateX(0);}
+        50% {transform: translateX(20px);}
+    }
     </style>
     """,
     unsafe_allow_html=True,
 )
+# --- SNOWFLAKES ---
+snowflakes = ""
+for i in range(12):
+    snowflakes += f"""
+    <div class="snowflake" style="left: {8 * i}%; animation-delay: {0.7 * i}s;">
+        ❄
+    </div>
+    """
+
+st.markdown(snowflakes, unsafe_allow_html=True)
 
 # --- HEADER ---
 st.title("🎄 AI Christmas Gift Idea Generator")
 st.write(
-    "Generate a curated list of gift ideas based on the person's interests, "
-    "your budget, and your goal for the present."
+    "Tell the elves who you're shopping for, and get perfectly tailored Christmas gift ideas."
 )
 
 # --- INPUT FORM ---
@@ -130,7 +222,7 @@ with st.form("gift_form"):
         placeholder="e.g. Fun, Silly, Main gift that they will love",
     )
 
-    submitted = st.form_submit_button("Generate Gift List")
+    submitted = st.form_submit_button("🎁 Generate Gift List")
 
 # --- MAIN LOGIC ---
 if submitted:
