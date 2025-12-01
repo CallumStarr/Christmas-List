@@ -210,7 +210,7 @@ For each gift, follow these rules:
 - "gift_name":
   - Short, clear, appealing display name.
   - Should sound like a product title someone would recognise on a listing.
-  - Example: "LEGO Technic Porsche 911 RSR Car Model Kit".
+  - Example: "Fujifilm Instax Mini 12 Instant Camera".
 
 - "amazon_search_term":
   - A search phrase that a user can paste directly into Amazon’s search bar.
@@ -255,8 +255,8 @@ Each object in the array MUST have exactly these keys and no others:
 Return strictly JSON:
 [
   {{
-    "gift_name": "Display Name (e.g. LEGO Technic Porsche 911 RSR)",
-    "amazon_search_term": "Brand + Full Name + \"Model Number\" (e.g. LEGO Technic Porsche 911 RSR \"42096\")",
+    "gift_name": "Display Name (e.g. Fujifilm Instax Instant Camera)",
+    "amazon_search_term": "Brand + Full Name + \"Model Number\" (e.g. Fujifilm Instax Instant Camera \"Mini 12\")",
     "why_it_fits": "One sentence on why it fits the interests",
     "lasting_impact": "One sentence on the lasting_impact of gift",
     "buying_tip": "A specific tip (e.g. 'Ensure it is the Technic version')"
