@@ -180,7 +180,7 @@ st.markdown(
     button[data-testid="baseButton-primary"],
     a[role="button"] {
         background: linear-gradient(135deg, #c0392b, #e74c3c) !important;
-        color: #ffffff !important;
+        color: #FF0000 !important;
         border-radius: 999px !important;
         border: none !important;
         padding: 0.6rem 1.2rem !important;
