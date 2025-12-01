@@ -146,7 +146,7 @@ st.markdown(
         margin-bottom: 20px;
     }
 
-           /* Form inputs & select – stop them being purple (input + textarea + containers) */
+    /* Form inputs & select – stop them being purple (input + textarea + containers) */
     .stTextInput > div > div,
     .stTextInput > div > div > input,
     .stTextArea > div,
@@ -182,7 +182,6 @@ st.markdown(
     .stTextArea textarea::placeholder {
         color: #9ca3af;
     }
-
 
     /* Override ALL Streamlit buttons (including form submit) */
     .stButton > button,
@@ -260,12 +259,13 @@ st.write(
     "Tell the elves who you're shopping for, and get perfectly tailored Christmas gift ideas."
 )
 
+# --- REGION SELECT (OUTSIDE FORM, SO CURRENCY UPDATES LIVE) ---
+selected_region = st.selectbox("Select Amazon Region", list(AMAZON_CONFIG.keys()))
+region_data = AMAZON_CONFIG[selected_region]
+currency_symbol = region_data["currency"]
+
 # --- INPUT FORM ---
 with st.form("gift_form"):
-    selected_region = st.selectbox("Select Amazon Region", list(AMAZON_CONFIG.keys()))
-    region_data = AMAZON_CONFIG[selected_region]
-    currency_symbol = region_data["currency"]
-
     col1, col2 = st.columns(2)
     with col1:
         age = st.text_input("Age Group", placeholder="e.g. 3 year old")
