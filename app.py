@@ -2,410 +2,317 @@ import streamlit as st
 import google.generativeai as genai
 import json
 import urllib.parse
-import re
-import pandas as pd
 
 # --- CONFIGURATION ---
+# 1. Get your Gemini API Key: https://aistudio.google.com/
+# 2. Configure your Amazon Regions and Affiliate Tags below.
 AMAZON_CONFIG = {
-    "USA (.com)": {"domain": ".com", "tag": "mcstarrstudio-21", "currency": "$"},
-    "United Kingdom (.co.uk)": {"domain": ".co.uk", "tag": "mcstarrstudio-21", "currency": "£"},
-    "Canada (.ca)": {"domain": ".ca", "tag": "your-ca-tag-20", "currency": "C$"},
-    "Australia (.com.au)": {"domain": ".com.au", "tag": "your-au-tag-20", "currency": "A$"},
-    "Germany (.de)": {"domain": ".de", "tag": "your-de-tag-21", "currency": "€"}
+    "USA (.com)": {
+        "domain": ".com",
+        "tag": "mcstarrstudio-21",
+        "currency": "$"
+    },
+    "United Kingdom (.co.uk)": {
+        "domain": ".co.uk",
+        "tag": "mcstarrstudio-21",  # <--- Perfect!
+        "currency": "£"
+    },
+    "Canada (.ca)": {
+        "domain": ".ca",
+        "tag": "your-ca-tag-20",
+        "currency": "C$"
+    },
+    "Australia (.com.au)": {
+        "domain": ".com.au",
+        "tag": "your-au-tag-20",
+        "currency": "A$"
+    },
+    "Germany (.de)": {
+        "domain": ".de",
+        "tag": "your-de-tag-21",
+        "currency": "€"
+    }
 }
 
-# --- PAGE SETUP ---
 st.set_page_config(
     page_title="AI Christmas Gift Idea Generator",
-    page_icon="🎁",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_icon="🎄",
+    layout="centered"
 )
 
 # --- CSS STYLING ---
-st.markdown("""
+st.markdown(
+    """
     <style>
-    /* Main Background & Fonts */
-    .stApp {
-        background-color: #f8f9fa;
-    }
-    h1 {
-        color: #d42426; /* Christmas Red */
-        font-family: 'Helvetica', sans-serif;
-        font-weight: 800;
-    }
-    h3 {
-        color: #165b33; /* Pine Green */
-    }
-
-    /* Gift Card Styling */
     .gift-card {
         background-color: #ffffff;
-        padding: 20px;
-        border-radius: 12px;
-        border-left: 6px solid #d42426;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        margin-bottom: 20px;
-        transition: transform 0.2s, box-shadow 0.2s;
+        padding: 25px;
+        border-radius: 15px;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
+        transition: transform 0.2s;
     }
     .gift-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-        border-left: 6px solid #165b33;
-    }
-    .gift-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
     }
     .gift-title {
-        font-size: 20px;
-        font-weight: 700;
-        color: #333;
+        font-size: 22px;
+        font-weight: 800;
+        color: #2c3e50;
+        margin-bottom: 10px;
     }
-    .badge {
-        background-color: #e8f5e9;
-        color: #1b5e20;
-        padding: 4px 8px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-    .section-title {
-        font-size: 14px;
-        font-weight: 700;
+    .gift-reason {
         color: #555;
-        text-transform: uppercase;
-        margin-top: 10px;
+        font-size: 16px;
+        margin-bottom: 10px;
+        border-left: 4px solid #f1c40f;
+        padding-left: 10px;
     }
-    .gift-text {
-        color: #444;
+    .gift-benefit {
+        color: #2980b9;
         font-size: 15px;
-        line-height: 1.5;
-    }
-
-    /* Button Styling */
-    div.stButton > button:first-child {
-        background-color: #d42426;
-        color: white;
+        background-color: #f0f8ff;
+        padding: 12px;
         border-radius: 8px;
-        font-weight: bold;
-        border: none;
-        padding: 10px 20px;
+        margin-bottom: 15px;
+        border: 1px solid #d6eaf8;
     }
-    div.stButton > button:first-child:hover {
-        background-color: #b30002;
-        border: none;
+    .pro-tip {
+        background-color: #e8f8f5;
+        border: 1px solid #d1f2eb;
+        color: #117a65;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 20px;
     }
     </style>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True,
+)
 
-# --- SESSION STATE MANAGEMENT ---
-if 'results' not in st.session_state:
-    st.session_state['results'] = None
-if 'generated' not in st.session_state:
-    st.session_state['generated'] = False
+# --- HEADER ---
+st.title("🎄 AI Christmas Gift Idea Generator")
+st.write(
+    "Generate a curated list of gift ideas based on the person's interests, "
+    "your budget, and your goal for the present."
+)
 
-# --- HELPER FUNCTION: CLEAN JSON ---
-def extract_json(text):
-    """Robust JSON extraction from LLM response"""
-    try:
-        # Try finding the first [ and last ]
-        match = re.search(r'\[.*\]', text, re.DOTALL)
-        if match:
-            return json.loads(match.group())
-        else:
-            # Fallback if no brackets found (rare with Gemini JSON mode)
-            return json.loads(text)
-    except Exception as e:
-        return []
+# --- INPUT FORM ---
+with st.form("gift_form"):
+    selected_region = st.selectbox("Select Amazon Region", list(AMAZON_CONFIG.keys()))
+    region_data = AMAZON_CONFIG[selected_region]
+    currency_symbol = region_data["currency"]
 
-def clean_text_field(value: str) -> str:
-    if not isinstance(value, str):
-        value = str(value)
-
-    # Remove fenced code blocks ```...```
-    value = re.sub(r"```.*?```", "", value, flags=re.DOTALL)
-
-    # Strip any HTML tags just in case
-    value = re.sub(r"<[^>]+>", "", value)
-
-    # Collapse whitespace
-    value = re.sub(r"\s+", " ", value).strip()
-    return value
-
-# --- SIDEBAR INPUTS ---
-with st.sidebar:
-    st.title("🎅 AI Christmas Gift Idea Generator")
-    st.markdown("Configure your search:")
-
-    # 1. API Configuration
-    try:
-        genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-        api_ok = True
-    except (FileNotFoundError, KeyError):
-        st.error("⚠️ API Key Missing! Set GOOGLE_API_KEY in secrets.")
-        api_ok = False
-
-    # 2. User Inputs
-    with st.form("gift_form"):
-        selected_region = st.selectbox("🌎 Amazon Region", list(AMAZON_CONFIG.keys()))
-        region_data = AMAZON_CONFIG[selected_region]
-        currency = region_data["currency"]
-
-        col1, col2 = st.columns(2)
-        with col1:
-            age = st.text_input("Age", placeholder="e.g. 7 years old")
-        with col2:
-            relation = st.text_input("Who is this for?", placeholder="e.g. Son, Niece")
-
-        budget_option = st.select_slider(
+    col1, col2 = st.columns(2)
+    with col1:
+        age = st.text_input("Age Group", placeholder="e.g. 3 year old")
+    with col2:
+        budget = st.selectbox(
             "Budget",
-            options=["Under £25", "£25-60", "£60-150", "Over £150"],
-            value="£25-60"
+            [
+                "Any",
+                f"Under {currency_symbol}20",
+                f"{currency_symbol}20 - {currency_symbol}50",
+                f"{currency_symbol}50+",
+            ],
         )
 
-        # Translate slider to text for AI
-        budget_map = {
-            "Under £25": f"Under {currency}25",
-            "£25-60": f"{currency}25 - {currency}60",
-            "£60-150": f"{currency}60 - {currency}150",
-            "Over £150": f"Over {currency}150"
-        }
-        actual_budget = budget_map[budget_option]
-        st.caption(f"Targeting: {actual_budget}")
+    interests = st.text_area(
+        "Person's Interests",
+        placeholder="e.g. Paw Patrol, muddy puddles, dinosaurs",
+    )
+    goals = st.text_input(
+        "Goal of Gift",
+        placeholder="e.g. Fun, Silly, Main gift that they will love",
+    )
 
-        interests = st.text_area("🌟 Interests & Obsessions", placeholder="Minecraft, Space, Drawing, Cats...", height=100)
+    submitted = st.form_submit_button("Generate Gift List")
 
-        goals = st.text_area("🎯 Gift Goal / Vibe", placeholder="Educational but fun, Main 'Big' Gift, Keepsake...", height=70)
-
-        submitted = st.form_submit_button("Generate Christmas List 🎁")
-
-# --- MAIN CONTENT AREA ---
-
-st.title("🎄 Curated Christmas List Generator")
-st.markdown(f"**Current Region:** {selected_region} | **Affiliate Mode:** Active")
-
-if not api_ok:
-    st.warning("Please configure your API key to proceed.")
-    st.stop()
-
-# --- GENERATION LOGIC ---
+# --- MAIN LOGIC ---
 if submitted:
-    if not interests or not age:
-        st.error("⚠️ Please enter at least an Age and Interests.")
+    if not interests:
+        st.warning("Please tell the generator what the person likes!")
     else:
-        st.session_state['generated'] = False  # Reset
+        # 1. SETUP API KEY
+        try:
+            genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+        except (FileNotFoundError, KeyError):
+            st.error("API Key missing. Please set GOOGLE_API_KEY in Streamlit secrets.")
+            st.stop()
 
-        with st.status("✨ The Elves are working...", expanded=True) as status:
+        with st.spinner("✨ Checking with the Elves..."):
             try:
-                model = genai.GenerativeModel('gemini-flash-latest')  # Use lighter, faster model
+                # 2. SELECT MODEL
+                model = genai.GenerativeModel("gemini-flash-latest")
 
-                status.write("🔍 Analyzing interests...")
-                status.write("🎁 Checking Amazon inventory (simulated)...")
-
+                # 3. PROMPT (The Gold Standard Logic)
                 prompt = f"""
-                ROLE: You are an expert personal gift shopper, specialising in thoughtful, high-converting Christmas gifts.
-                Your task:
-                Use the inputs below to recommend exactly 10 specific gift ideas that feel tailored, age-appropriate, and genuinely impressive.
-                                
-                CONTEXT:
-                - Recipient Age: {age}
-                - Relationship: {relation}
-                - Interests / hobbies: {interests}
-                - Gift goals: {goals} (e.g. "funny gift", "something they will love", "something they will cherish forever")
-                - Under £25: {actual_budget} (total Under £25 for ONE gift, in the currency of the region)
-                - Region: {selected_region} (the country/market where the gift will be purchased)
+ROLE: You are an expert personal gift shopper, specialising in thoughtful, high-converting Christmas gifts.
 
-                 TASK:
-                Generate a JSON list of exactly 8 highly specific gift ideas.
-                
-                CRITERIA:
-                1. DIVERSITY: Do not suggest 8 of the same type of thing (e.g. don't do 8 Lego sets). Mix categories (Books, Toys, Gear, Decor, etc.) unless the user asked for one specific thing.
-                2. SEARCHABILITY: The "search_term" must be easily found on Amazon.
-                3. RELEVANCE: Explain exactly why this specific item matches the entered interests.
-                               
-                GENERAL BEHAVIOUR
-                - Think like a human personal shopper who really understands the recipient and the buyer’s intent.
-                - Assume these are Christmas gifts: it is fine to subtly reference the festive/holiday context, but core fit and usefulness matter more than being "gimmicky".
-                - Strongly prioritise gifts that clearly match BOTH the interests AND the stated goal.
-                - Ensure every suggestion is age-appropriate and safe:
-                  - Avoid small parts and unsafe items for young children.
-                  - Avoid adult themes/content for minors.
-                - STRICTLY respect the Under £25:
-                  - Only suggest gifts that can realistically be bought at or under the specified Under £25 in the given region.
-                  - If the Under £25 is very low, favour small but thoughtful and creative ideas instead of unrealistic high-ticket items.
-                - Be SPECIFIC, not generic:
-                  - Suggest concrete products that a person could actually search for on Amazon.
-                  - Prefer recognisable product lines and brands when possible (e.g. "Nintendo Switch Lite", "Fujifilm Instax Mini 12 Instant Camera", "Stanley Classic Quencher Tumbler", "Catan Board Game", not "(generic) Board Game".
-                - Aim for VARIETY across the 10 ideas:
-                  - Avoid 10 nearly identical items (e.g. five very similar board games).
-                  - Vary categories where possible (e.g. one game, one hobby tool, one sentimental/keepsake item, one practical everyday item, one creative or experience-style item), as long as they still match the interests and goals.
-                - Align with the goal type:
-                  - If the goal is humour ("funny gift"), choose playful, light-hearted items that are funny but NOT offensive, cruel, or inappropriate.
-                  - If the goal is sentimental ("something they will cherish forever"), prioritise keepsakes, customisable/meaningful gifts, and memory-making items that could have long-term emotional value.
-                  - If the goal is enjoyment/utility ("something they will love" or "actually use"), prioritise high-utility items that fit their daily life or main hobbies and that they are realistically likely to use often.
-                  - Do NOT default to the same brand or product type repeatedly (e.g. do not suggest LEGO sets unless they clearly match the interests or age group).
-                  - Your suggestions MUST be grounded in the provided interests and goals, not generic toy ideas.
-                  - Treat the "Interests / hobbies" as your primary guide: every gift should clearly relate to at least one of these interests.
-                  - Avoid suggesting products that are only weakly related to the interests, even if they are popular gifts in general.
+Your task:
+Use the inputs below to recommend exactly 10 specific gift ideas that feel tailored, age-appropriate, and genuinely impressive.
 
+Inputs:
+- Age: {age}
+- Interests / hobbies: {interests}
+- Gift goals: {goals} (e.g. "funny gift", "something they will love", "something they will cherish forever")
+- Budget: {budget} (total budget for ONE gift, in the currency of the region)
+- Region: {selected_region} (the country/market where the gift will be purchased)
 
-                AMAZON SEARCH TERM (CRITICAL RULES)
-                - Every gift must be something that a shopper could plausibly find on Amazon in the specified region.
-                - You must construct the "amazon_search_term" by combining:
-                  1) Brand
-                  2) Full Product Name
-                  3) Model Number (if applicable)
-                - The Model Number MUST be wrapped in double quotes.
-                - - Correct example:
-                  - "Fujifilm Instax Mini 12 Instant Camera 'Blush Pink'"
-                - Incorrect examples:
-                  - "LEGO \"42096\"" (too short, missing full product name)
-                  - "LEGO Technic Porsche 42096" (model number not in quotes)
-                - If there is NO clear or commonly used model number:
-                  - Do NOT invent one.
-                  - Just use Brand + Full Product Name (e.g. "Fujifilm Instax Mini 12 Instant Camera").
-                
-                FIELD-LEVEL GUIDELINES
-                For each gift, follow these rules:
-                IMPORTANT OUTPUT RULES (FOR ALL STRING FIELDS)
-                - All values for "category", "gift_name", "amazon_search_term", "reason", "impact", and "buying_tip"
-                  MUST be plain text only.
-                - Do NOT include any HTML tags (<div>, <strong>, etc.), markdown formatting, bullet points,
-                  or code blocks (no ``` fences).
-                - Each field must be a single-line sentence (you may use punctuation, but no line breaks).
+GENERAL BEHAVIOUR
+- Think like a human personal shopper who really understands the recipient and the buyer’s intent.
+- Assume these are Christmas gifts: it is fine to subtly reference the festive/holiday context, but core fit and usefulness matter more than being "gimmicky".
+- Strongly prioritise gifts that clearly match BOTH the interests AND the stated goal.
+- Ensure every suggestion is age-appropriate and safe:
+  - Avoid small parts and unsafe items for young children.
+  - Avoid adult themes/content for minors.
+- STRICTLY respect the budget:
+  - Only suggest gifts that can realistically be bought at or under the specified budget in the given region.
+  - If the budget is very low, favour small but thoughtful and creative ideas instead of unrealistic high-ticket items.
+- Be SPECIFIC, not generic:
+  - Suggest concrete products that a person could actually search for on Amazon.
+  - Prefer recognisable product lines and brands when possible (e.g. "Nintendo Switch Lite", "Fujifilm Instax Mini 12 Instant Camera", "Stanley Classic Quencher Tumbler", "Catan Board Game", not "(generic) Board Game").
+- Aim for VARIETY across the 10 ideas:
+  - Avoid 10 nearly identical items (e.g. five very similar board games).
+  - Vary categories where possible (e.g. one game, one hobby tool, one sentimental/keepsake item, one practical everyday item, one creative or experience-style item), as long as they still match the interests and goals.
+- Align with the goal type:
+  - If the goal is humour ("funny gift"), choose playful, light-hearted items that are funny but NOT offensive, cruel, or inappropriate.
+  - If the goal is sentimental ("something they will cherish forever"), prioritise keepsakes, customisable/meaningful gifts, and memory-making items that could have long-term emotional value.
+  - If the goal is enjoyment/utility ("something they will love" or "actually use"), prioritise high-utility items that fit their daily life or main hobbies and that they are realistically likely to use often.
+- Do NOT default to the same brand or product type repeatedly (e.g. do not suggest LEGO sets unless they clearly match the interests or age group).
+- Your suggestions MUST be grounded in the provided interests and goals, not generic toy ideas.
+- Treat the "Interests / hobbies" as your primary guide: every gift should clearly relate to at least one of these interests.
+- Avoid suggesting products that are only weakly related to the interests, even if they are popular gifts in general.
 
+AMAZON SEARCH TERM (CRITICAL RULES)
+- Every gift must be something that a shopper could plausibly find on Amazon in the specified region.
+- You must construct the "amazon_search_term" by combining:
+  1) Brand
+  2) Full Product Name
+  3) Model Number (if applicable)
+- The Model Number MUST be wrapped in double quotes.
+- Correct example:
+  - "Fujifilm Instax Mini 12 Instant Camera 'Blush Pink'"
+- Incorrect examples:
+  - "LEGO \"42096\"" (too short, missing full product name)
+  - "LEGO Technic Porsche 42096" (model number not in quotes)
+- If there is NO clear or commonly used model number:
+  - Do NOT invent one.
+  - Just use Brand + Full Product Name (e.g. "Fujifilm Instax Mini 12 Instant Camera").
 
-                - "gift_name":
-                  - Short, clear, appealing display name.
-                  - Should sound like a product title someone would recognise on a listing.
-                  - Example: "LEGO Technic Porsche 911 RSR Car Model Kit".
-                
-                - "amazon_search_term":
-                  - A search phrase that a user can paste directly into Amazon’s search bar.
-                  - Must follow the AMAZON SEARCH TERM rules above.
-                  - Do not add extra commentary or emojis.
-                
-                - "why_it_fits":
-                  - ONE concise sentence.
-                  - Clearly link the gift to the recipient’s age, interests, AND the stated goal.
-                  - Example: "This detailed car model perfectly suits their love of motorsport and provides a satisfying, hands-on Christmas project."
-                
-                - "lasting_impact":
-                  - ONE sentence.
-                  - Describe the deeper, longer-term positive impact this gift can have on the recipient’s life, growth, relationships, or wellbeing.
-                  - Go beyond the initial excitement of opening the gift and focus on how it will keep adding value over time.
-                  - Adapt the angle to their age:
-                    - For children: focus on curiosity, imagination, independence, learning through play, or bonding time with family.
-                    - For teens: focus on identity, confidence, skill-building, creativity, aspirations, or positive social connection.
-                    - For adults: focus on stress relief, daily quality of life, meaningful routines, learning or deepening a hobby, or making lasting memories with loved ones.
-                
-                - "buying_tip":
-                  - ONE specific, actionable tip that helps them buy the right version.
-                  - Examples:
-                    - "Check the age rating and choose the set with at least 500 pieces for a longer build."
-                    - "Make sure you select the Mini 12 model, not the older Mini 9."
-                    - "Choose the correct size based on their usual UK shoe size."
-                
-                OUTPUT FORMAT (JSON ARRAY ONLY):
-                [
-                    {{
-                        "category": "Creative / Tech / Outdoor (Pick one)",
-                        "gift_name": "Specific Product Name",
-                        "amazon_search_term": "Brand Name Product Name Model",
-                        "reason": "Why it fits their interests",
-                        "impact": "Long term benefit",
-                        "buying_tip": "Specific check (e.g. check batteries)"
-                ]
-                """
-                # Request JSON mode specifically
-                response = model.generate_content(
-                    prompt,
-                    generation_config={"response_mime_type": "application/json"}
-                )
+FIELD-LEVEL GUIDELINES
+For each gift, follow these rules:
 
-                data = extract_json(response.text)
-                st.session_state['results'] = data
-                st.session_state['generated'] = True
-                status.update(label="✅ List Ready!", state="complete", expanded=False)
+- "gift_name":
+  - Short, clear, appealing display name.
+  - Should sound like a product title someone would recognise on a listing.
+  - Example: "LEGO Technic Porsche 911 RSR Car Model Kit".
+
+- "amazon_search_term":
+  - A search phrase that a user can paste directly into Amazon’s search bar.
+  - Must follow the AMAZON SEARCH TERM rules above.
+  - Do not add extra commentary or emojis.
+
+- "why_it_fits":
+  - ONE concise sentence.
+  - Clearly link the gift to the recipient’s age, interests, AND the stated goal.
+  - Example: "This detailed car model perfectly suits their love of motorsport and provides a satisfying, hands-on Christmas project."
+
+- "lasting_impact":
+  - ONE sentence.
+  - Describe the deeper, longer-term positive impact this gift can have on the recipient’s life, growth, relationships, or wellbeing.
+  - Go beyond the initial excitement of opening the gift and focus on how it will keep adding value over time.
+  - Adapt the angle to their age:
+    - For children: focus on curiosity, imagination, independence, learning through play, or bonding time with family.
+    - For teens: focus on identity, confidence, skill-building, creativity, aspirations, or positive social connection.
+    - For adults: focus on stress relief, daily quality of life, meaningful routines, learning or deepening a hobby, or making lasting memories with loved ones.
+
+- "buying_tip":
+  - ONE specific, actionable tip that helps them buy the right version.
+  - Examples:
+    - "Check the age rating and choose the set with at least 500 pieces for a longer build."
+    - "Make sure you select the Mini 12 model, not the older Mini 9."
+    - "Choose the correct size based on their usual UK shoe size."
+
+OUTPUT FORMAT (STRICT)
+- You must return ONLY valid JSON.
+- No markdown, no backticks, no comments, no explanations.
+- Return a JSON array of EXACTLY 10 objects.
+- Use double quotes for all keys and string values.
+- Do NOT include trailing commas.
+
+Each object in the array MUST have exactly these keys and no others:
+- "gift_name"
+- "amazon_search_term"
+- "why_it_fits"
+- "lasting_impact"
+- "buying_tip"
+
+Return strictly JSON:
+[
+  {{
+    "gift_name": "Display Name (e.g. LEGO Technic Porsche 911 RSR)",
+    "amazon_search_term": "Brand + Full Name + \"Model Number\" (e.g. LEGO Technic Porsche 911 RSR \"42096\")",
+    "why_it_fits": "One sentence on why it fits the interests",
+    "lasting_impact": "One sentence on the lasting_impact of gift",
+    "buying_tip": "A specific tip (e.g. 'Ensure it is the Technic version')"
+  }}
+]
+"""
+
+                response = model.generate_content(prompt)
+                clean_text = response.text.replace("```json", "").replace("```", "").strip()
+                gift_data = json.loads(clean_text)
+
+                st.subheader(f"🎁 Top Picks for {age}")
+
+                # 4. DISPLAY LOOP
+                for gift in gift_data:
+                    name = gift.get("gift_name", "Mystery Gift")
+                    # Fallback: if AI fails to give search term, use name
+                    search_term = gift.get("amazon_search_term", name)
+
+                    reason = gift.get("why_it_fits", "Fits your criteria perfectly.")
+                    benefit = gift.get("lasting_impact", "Great gift idea.")
+                    tip = gift.get("buying_tip", f"Look for the highest rated version of {name}")
+
+                    # Generate Regional Link using the OPTIMIZED Search Term
+                    domain = region_data["domain"]
+                    tag = region_data["tag"]
+
+                    # We encode the search term to be URL safe (quotes become %22)
+                    encoded_search = urllib.parse.quote(search_term)
+                    amazon_link = f"https://www.amazon{domain}/s?k={encoded_search}&tag={tag}"
+
+                    # Layout
+                    with st.container():
+                        st.markdown(
+                            f"""
+                            <div class="gift-card">
+                                <div class="gift-title">{name}</div>
+                                <div class="gift-reason">💡 {reason}</div>
+                                <div class="gift-benefit">🎓 {benefit}</div>
+                                <div class="pro-tip">✨ <strong>Pro Tip:</strong> {tip}</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+
+                        # Button Label: We show the search term but remove quotes so it looks nice
+                        clean_label = search_term.replace('"', "")
+
+                        st.link_button(
+                            label=f"👉 Find '{clean_label}' on Amazon{domain}",
+                            url=amazon_link,
+                            type="primary",
+                            use_container_width=True,
+                        )
+
+                        st.write(" ")
 
             except Exception as e:
-                st.error(f"Elves dropped the list: {e}")
-
-# --- DISPLAY RESULTS ---
-if st.session_state['generated'] and st.session_state['results']:
-
-    results = st.session_state['results']
-
-    # 1. Action Bar (CSV Download)
-    df = pd.DataFrame(results)
-    csv = df.to_csv(index=False).encode('utf-8')
-
-    col_d1, col_d2 = st.columns([8, 2])
-    with col_d2:
-        st.download_button(
-            "📥 Download List",
-            data=csv,
-            file_name="christmas_list.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
-
-    # 2. Grid Layout for Cards
-    for i, gift in enumerate(results):
-        name = clean_text_field(gift.get('gift_name', 'Mystery Gift'))
-        category = clean_text_field(gift.get('category', 'Gift'))
-        reason = clean_text_field(gift.get('reason', 'Fits your criteria perfectly.'))
-        impact = clean_text_field(gift.get('impact', 'This gift will have a positive, lasting impact.'))
-        tip = clean_text_field(gift.get('buying_tip', f"Look for the highest rated version of {name}"))
-
-        # Create valid Amazon Link
-        domain = region_data["domain"]
-        tag = region_data["tag"]
-        raw_term = clean_text_field(gift.get('amazon_search_term', name))
-        encoded_term = urllib.parse.quote(raw_term.replace('"', ''))
-        link = f"https://www.amazon{domain}/s?k={encoded_term}&tag={tag}"
-
-        # Display logic
-        with st.container():
-            st.markdown(f"""
-            <div class="gift-card">
-                <div class="gift-header">
-                    <div class="gift-title">{i+1}. {name}</div>
-                    <span class="badge">{category}</span>
-                </div>
-                <div class="section-title">Why they'll love it</div>
-                <div class="gift-text">{reason}</div>
-
-                <div class="section-title">Lasting Impact</div>
-                <div class="gift-text"><i>{impact}</i></div>
-
-                <div style="margin-top:15px; font-size:13px; color:#d68910;">
-                    <strong>⚠️ Tip:</strong> {tip}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Use columns to keep the button from stretching too wide
-            b_col1, b_col2, b_col3 = st.columns([1, 2, 1])
-            with b_col2:
-                st.link_button(
-                    label=f"👉 Check Price on Amazon{domain}",
-                    url=link,
-                    type="primary",
-                    use_container_width=True
-                )
-            st.write("")  # Spacer
-
-elif not submitted:
-    # Empty State / Landing info
-    st.info("👈 Use the sidebar to tell the Elves about the recipient!")
-    st.markdown("""
-    ### How it works
-    1. **Tell us who it's for:** Age, relationship, and what they love.
-    2. **Set your goal:** Are you looking for a 'Main Gift', a 'Stocking Filler', or something educational?
-    3. **Get a curated list:** The AI checks for products that fit your description and Under £25.
-    4. **Click to buy:** Direct links to search your local Amazon store.
-    """)
+                st.error(f"The Elves encountered a glitch: {e}")
