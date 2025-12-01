@@ -252,7 +252,7 @@ Return strictly JSON:
                     search_term = gift.get('amazon_search_term', name) 
                     
                     reason = gift.get('why_it_fits', 'Fits your criteria perfectly.')
-                    benefit = gift.get('developmental_benefit', 'Great for development.')
+                    benefit = gift.get('lasting_impact', 'Great gift idea.')
                     tip = gift.get('buying_tip', f"Look for the highest rated version of {name}")
                     
                     # Generate Regional Link using the OPTIMIZED Search Term
