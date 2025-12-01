@@ -377,7 +377,7 @@ if st.session_state['generated'] and st.session_state['results']:
                     type="primary", 
                     use_container_width=True
                 )
-            st.write("") # Spacer
+        st.write("") # Spacer
 
 elif not submitted:
     # Empty State / Landing info
