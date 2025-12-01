@@ -44,14 +44,19 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    /* Overall app background */
+    /* Overall app background – photo + dark overlay for readability */
     [data-testid="stAppViewContainer"] {
-        background: radial-gradient(circle at top,
-            #ffe6e6 0,
-            #fff8e1 40%,
-            #e8f5e9 100%);
-        background-attachment: fixed;
+        background:
+            linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.45)),
+            url("https://images.pexels.com/photos/695971/pexels-photo-695971.jpeg")
+            no-repeat center center fixed;
+        background-size: cover;
     }
+    ...
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
         /* Global text colours (override Streamlit's white text) */
     h2, h3, h4, h5, h6,
     [data-testid="stMarkdownContainer"],
