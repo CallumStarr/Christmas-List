@@ -369,15 +369,15 @@ if st.session_state['generated'] and st.session_state['results']:
         link = f"https://www.amazon{domain}/s?k={encoded_term}&tag={tag}"
 
        # Use columns to keep the button from stretching too wide
-        b_col1, b_col2, b_col3 = st.columns([1, 2, 1])
+            b_col1, b_col2, b_col3 = st.columns([1, 2, 1])
             with b_col2:
                 st.link_button(
-                    label=f"👉 Check Price on Amazon{domain}",
+                    label=f"👉 Check Price on Amazon{domain}", 
                     url=link,
-                    type="primary",
+                    type="primary", 
                     use_container_width=True
                 )
-            st.write("")  # Spacer
+            st.write("") # Spacer
 
 elif not submitted:
     # Empty State / Landing info
