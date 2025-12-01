@@ -135,7 +135,7 @@ if submitted:
                 ROLE: You are an expert personal gift shopper, specialising in thoughtful, high-converting Christmas gifts.
 
                 Your task:
-                Use the inputs below to recommend exactly 5 specific gift ideas that feel tailored, age-appropriate, and genuinely impressive.
+                Use the inputs below to recommend exactly 10 specific gift ideas that feel tailored, age-appropriate, and genuinely impressive.
                 
                 Inputs:
                 - Age: {age}
@@ -157,8 +157,8 @@ if submitted:
                 - Be SPECIFIC, not generic:
                   - Suggest concrete products that a person could actually search for on Amazon.
                   - Prefer recognisable product lines and brands when possible (e.g. "Nintendo Switch Lite", "Fujifilm Instax Mini 12 Instant Camera", "Stanley Classic Quencher Tumbler", "Catan Board Game", not "(generic) Board Game".
-                - Aim for VARIETY across the 5 ideas:
-                  - Avoid 5 nearly identical items (e.g. five very similar board games).
+                - Aim for VARIETY across the 10 ideas:
+                  - Avoid 10 nearly identical items (e.g. five very similar board games).
                   - Vary categories where possible (e.g. one game, one hobby tool, one sentimental/keepsake item, one practical everyday item, one creative or experience-style item), as long as they still match the interests and goals.
                 - Align with the goal type:
                   - If the goal is humour ("funny gift"), choose playful, light-hearted items that are funny but NOT offensive, cruel, or inappropriate.
@@ -223,7 +223,7 @@ if submitted:
                 OUTPUT FORMAT (STRICT)
                 - You must return ONLY valid JSON.
                 - No markdown, no backticks, no comments, no explanations.
-                - Return a JSON array of EXACTLY 5 objects.
+                - Return a JSON array of EXACTLY 10 objects.
                 - Use double quotes for all keys and string values.
                 - Do NOT include trailing commas.
                 
