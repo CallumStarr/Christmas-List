@@ -86,7 +86,6 @@ st.markdown(
         padding: 25px;
         border-radius: 18px;
         border: 2px solid #c0392b;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.08);
         margin-bottom: 25px;
         transition: transform 0.2s, box-shadow 0.2s;
         position: relative;
@@ -154,7 +153,6 @@ st.markdown(
         color: #0a1224 !important;             /* text colour */
         border-radius: 12px;
         border: 1px solid #c0392b;             /* festive red border */
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
 
     /* Hover / focus state */
