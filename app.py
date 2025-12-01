@@ -146,28 +146,32 @@ st.markdown(
         margin-bottom: 20px;
     }
 
-    /* Form inputs & select – stop them being purple */
+       /* Form inputs & select – stop them being purple (container + input) */
+    .stTextInput > div > div,
     .stTextInput > div > div > input,
-    .stTextArea textarea,
+    .stTextArea > div > textarea,
+    [data-baseweb="input"],
+    [data-baseweb="input"] > div,
+    [data-baseweb="input"] input,
     [data-baseweb="select"] > div {
         background-color: #ffffff !important;  /* box colour */
         color: #111827 !important;             /* text colour */
-        border-radius: 12px;
-        border: 1px solid #c0392b;             /* festive red border */
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        border-radius: 12px !important;
+        border: 1px solid #c0392b !important;  /* festive red border */
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
     }
 
-    /* Hover / focus state */
-    .stTextInput > div > div > input:focus,
-    .stTextArea textarea:focus,
+    /* Hover / focus state (container, not just input) */
+    .stTextInput > div > div:focus-within,
+    [data-baseweb="input"]:focus-within,
     [data-baseweb="select"] > div:focus-within {
         border: 2px solid #c0392b !important;
-        box-shadow: 0 0 0 1px #c0392b33;
-        outline: none;
+        box-shadow: 0 0 0 1px #c0392b33 !important;
+        outline: none !important;
     }
 
     /* Placeholder text colour */
-    .stTextInput > div > div > input::placeholder,
+    .stTextInput input::placeholder,
     .stTextArea textarea::placeholder {
         color: #9ca3af;
     }
