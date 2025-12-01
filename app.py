@@ -169,7 +169,7 @@ st.markdown(
     /* Placeholder text colour */
     .stTextInput > div > div > input::placeholder,
     .stTextArea textarea::placeholder {
-        color: #9ca3af;
+        color: #3b4659;
     }
 
     /* Override ALL Streamlit buttons (including form submit) */
